@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+<parent>
+  <groupId>org.mpilone</groupId>
+  <artifactId>timeline-vaadin-parent</artifactId>
+  <version>1.0-SNAPSHOT</version>
+</parent>
+
+    <artifactId>timeline-vaadin</artifactId>
+    <name>Timeline for Vaadin</name>
+    <packaging>jar</packaging>
+
+  <dependencies>
+    <!-- Compile -->
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-server</artifactId>
+      <version>${vaadin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.6</version>
+    </dependency>
+
+    <!-- Runtime -->
+
+    <!-- Provided -->
+    
+  </dependencies>
+  
+  <distributionManagement>
+    <!-- Use 
+      -DaltDeploymentRepository=mpilone-snapshots::default::file:///Users/.../mvn-repo/snapshots 
+      when deploying locally.
+      
+      Refer to http://cemerick.com/2010/08/24/hosting-maven-repos-on-github/
+    -->
+    <repository>
+      <id>mpilone-releases</id>
+      <name>GitHub MVN Repository Releases</name>
+      <url>https://github.com/mpilone/mvn-repo/raw/master/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>mpilone-snapshots</id>
+      <name>GitHub MVN Repository Snapshots</name>
+      <url>https://github.com/mpilone/mvn-repo/raw/master/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+</project>

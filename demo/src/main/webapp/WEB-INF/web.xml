@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app
+  version="3.0"
+  xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <display-name>Vaadin Plupload Demp</display-name>
+  
+  <!-- The flag which controls production mode for all Vaadin applications. 
+  If in production mode, the developer/debug tools are not available but 
+  performance should be better. -->
+  <context-param>
+    <description>Vaadin production mode</description>
+    <param-name>productionMode</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <!-- Vaadin Servlet -->
+  <servlet>
+      <servlet-name>Vaadin Application Servlet</servlet-name>
+      <servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
+      <init-param>
+        <param-name>UI</param-name>
+        <param-value>org.mpilone.vaadin.Demo</param-value>
+      </init-param>
+      <async-supported>true</async-supported>
+    </servlet>
+
+    <servlet-mapping>
+      <servlet-name>Vaadin Application Servlet</servlet-name>
+      <url-pattern>/app/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+      <servlet-name>Vaadin Application Servlet</servlet-name>
+      <url-pattern>/VAADIN/*</url-pattern>
+    </servlet-mapping>
+    
+ 
+  
+  <!-- Filters -->
+ 
+  <!-- Jetty gzip compression filter   -->
+  <filter>
+    <filter-name>GzipFilter</filter-name>
+    <filter-class>org.eclipse.jetty.servlets.GzipFilter</filter-class>
+    <init-param>
+      <param-name>mimeTypes</param-name>
+      <param-value>text/html,text/plain,text/xml,application/json,application/xhtml+xml,text/css,application/javascript,image/svg+xml</param-value>
+    </init-param>
+    <init-param>
+      <param-name>excludePathPatterns</param-name>
+      <param-value>.*/PUSH/</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>GzipFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <welcome-file-list>
+   <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+  
+  <session-config>
+    <session-timeout>60</session-timeout>
+  </session-config>
+
+</web-app>

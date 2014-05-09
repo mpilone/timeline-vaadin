@@ -1,0 +1,100 @@
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.mpilone</groupId>
+    <artifactId>timeline-vaadin-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  
+  <artifactId>timeline-vaadin-demo</artifactId>
+  <packaging>war</packaging>
+
+  <name>Timeline for Vaadin Demo</name>
+
+  <properties>
+    <jetty.version>9.0.7.v20131107</jetty.version>
+  </properties>
+
+  <dependencies>
+    <!-- Compile -->
+    <dependency>
+      <groupId>org.mpilone</groupId>
+      <artifactId>timeline-vaadin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-server</artifactId>
+      <version>${vaadin.version}</version>
+    </dependency>
+    
+    <!-- Runtime -->
+    
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-client</artifactId>
+      <version>${vaadin.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-client-compiled</artifactId>
+      <version>${vaadin.version}</version>
+      <scope>runtime</scope>
+    </dependency> 
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-themes</artifactId>
+      <version>${vaadin.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.6</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!--<groupId>org.mortbay.jetty</groupId>-->
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>${jetty.version}</version>
+        <configuration>
+          <systemProperties>
+            <systemProperty>
+              <name>jetty.port</name>
+              <value>8090</value>
+            </systemProperty>
+            <systemProperty>
+              <name>org.apache.jasper.compiler.disablejsr199</name>
+              <value>true</value>
+            </systemProperty>
+          </systemProperties>
+          <reload>manual</reload>
+          <stopPort>9966</stopPort>
+          <stopKey>prss</stopKey>
+          <webAppConfig>
+            <contextPath>/${project.artifactId}</contextPath>
+            <!-- <defaultsDescriptor>src/main/webdefault.xml</defaultsDescriptor> -->
+          </webAppConfig>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      
+    </plugins>
+  </build>
+</project>
