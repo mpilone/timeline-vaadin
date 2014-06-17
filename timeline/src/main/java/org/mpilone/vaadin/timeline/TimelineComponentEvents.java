@@ -47,7 +47,7 @@ public abstract class TimelineComponentEvents {
   /**
    * The common base class of all timeline events.
    */
-  public abstract class TimelineComponentEvent extends Component.Event {
+  public abstract static class TimelineComponentEvent extends Component.Event {
 
     /**
      *  * Constructs the event.
@@ -104,7 +104,7 @@ public abstract class TimelineComponentEvents {
      *
      * @param event the event details
      */
-    public void eventSelect(EventSelect event);
+    void eventSelect(EventSelect event);
   }
 
   /**
@@ -157,7 +157,7 @@ public abstract class TimelineComponentEvents {
      *
      * @param event the event details
      */
-    public void visibleRangeChange(VisibleRangeChange event);
+    void visibleRangeChange(VisibleRangeChange event);
   }
 
 }
