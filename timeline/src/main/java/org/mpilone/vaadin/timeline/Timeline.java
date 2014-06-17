@@ -2,9 +2,11 @@ package org.mpilone.vaadin.timeline;
 
 import java.util.*;
 
-import org.mpilone.vaadin.timeline.shared.TimelineClientRpc;
-import org.mpilone.vaadin.timeline.shared.TimelineServerRpc;
-import org.mpilone.vaadin.timeline.shared.TimelineState;
+import org.mpilone.vaadin.timeline.TimelineComponentEvents.EventSelect;
+import org.mpilone.vaadin.timeline.TimelineComponentEvents.EventSelectListener;
+import org.mpilone.vaadin.timeline.TimelineComponentEvents.VisibleRangeChange;
+import org.mpilone.vaadin.timeline.TimelineComponentEvents.VisibleRangeChangeListener;
+import org.mpilone.vaadin.timeline.shared.*;
 
 import com.vaadin.annotations.*;
 import com.vaadin.data.Container;
@@ -14,7 +16,7 @@ import com.vaadin.ui.components.calendar.ContainerEventProvider;
 import com.vaadin.ui.components.calendar.event.*;
 
 /**
- * An implementation of the Chaps Links Timeline component
+ * An implementation of the CHAP Links Timeline component
  * (http://almende.github.io/chap-links-library/timeline.html).
  *
  * @author mpilone
@@ -457,11 +459,55 @@ public class Timeline extends AbstractJavaScriptComponent implements
     markAsDirty();
   }
 
+  /**
+   * Adds the given listener for {@link EventSelect} events.
+   *
+   * @param listener the listener to add
+   */
+  public void addEventSelectListener(EventSelectListener listener) {
+    addListener(EventSelect.class, listener,
+        TimelineComponentEvents.EVENT_SELECT_METHOD);
+  }
+
+  /**
+   * Adds the given listener for {@link EventSelect} events.
+   *
+   * @param listener the listener to add
+   */
+  public void removeEventSelectListener(EventSelectListener listener) {
+    removeListener(EventSelect.class, listener,
+        TimelineComponentEvents.EVENT_SELECT_METHOD);
+  }
+
+  /**
+   * Adds the given listener for {@link VisibleRangeChange} events.
+   *
+   * @param listener the listener to add
+   */
+  public void addVisibleRangeChangeListener(VisibleRangeChangeListener listener) {
+    addListener(VisibleRangeChange.class, listener,
+        TimelineComponentEvents.VISIBLE_RANGE_CHANGE_METHOD);
+  }
+
+  /**
+   * Adds the given listener for {@link VisibleRangeChange} events.
+   *
+   * @param listener the listener to add
+   */
+  public void removeVisibleChangeListenerListener(
+      VisibleRangeChangeListener listener) {
+    removeListener(VisibleRangeChange.class, listener,
+        TimelineComponentEvents.VISIBLE_RANGE_CHANGE_METHOD);
+  }
+
+  /**
+   * Implementation of the server RPC for the timeline component.
+   */
   private class ServerRpcImpl implements TimelineServerRpc {
 
     @Override
     public void ackSetCurrentTime() {
-      // TODO: Implement method
+      // TODO: Implement lag calculation and adjustment
     }
 
     @Override
@@ -475,8 +521,11 @@ public class Timeline extends AbstractJavaScriptComponent implements
         Timeline.this.startDate = startDate;
         Timeline.this.endDate = endDate;
 
-        System.out.println("rangeChanged: " + startDate + " to " + endDate);
-        // TODO: fire an event
+        Timeline.this.markAsDirty();
+
+        VisibleRangeChange evt =
+            new VisibleRangeChange(Timeline.this, startDate, endDate);
+        fireEvent(evt);
       }
     }
 
@@ -484,9 +533,15 @@ public class Timeline extends AbstractJavaScriptComponent implements
     public void select(int index) {
       System.out.println("Selected: " + index);
 
-      // TODO: fire an event
+      EventSelect evt;
+      if (index == -1 || events.size() <= index) {
+        evt = new EventSelect(Timeline.this, null);
+      }
+      else {
+        evt = new EventSelect(Timeline.this, events.get(index));
+      }
+
+      fireEvent(evt);
     }
-
   }
-
 }

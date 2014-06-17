@@ -9,6 +9,7 @@ import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
 import com.vaadin.ui.components.calendar.ContainerEventProvider;
+import com.vaadin.ui.components.calendar.event.CalendarEvent;
 
 /**
  *
@@ -48,6 +49,24 @@ public class DefaultDemo extends VerticalLayout {
 
     Timeline t = new Timeline(new ContainerEventProvider(container));
     t.setWidth(StyleConstants.FULL_WIDTH);
+    t.addEventSelectListener(new TimelineComponentEvents.EventSelectListener() {
+      @Override
+      public void eventSelect(TimelineComponentEvents.EventSelect event) {
+        CalendarEvent calEvent = event.getCalendarEvent();
+        System.out.println("Event select: " + (calEvent == null ?
+            "<no selection>" : calEvent.getCaption()));
+      }
+    });
+    t.addVisibleRangeChangeListener(
+        new TimelineComponentEvents.VisibleRangeChangeListener() {
+          @Override
+          public void visibleRangeChange(
+              TimelineComponentEvents.VisibleRangeChange event) {
+            System.out.println("Visible range change: " + event.
+                getStartDate()
+                + " to " + event.getEndDate());
+              }
+        });
     addComponent(t);
 
     // Control options
@@ -60,7 +79,7 @@ public class DefaultDemo extends VerticalLayout {
     controlLayout.setWidth("100%");
     addComponent(controlLayout);
 
-    Button btn = new Button("Show Now", new Button.ClickListener() {
+    Button btn = new Button("Go to Now", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
         timeline.setVisibleChartRangeNow();
