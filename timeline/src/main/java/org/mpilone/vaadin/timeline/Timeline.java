@@ -2,6 +2,7 @@ package org.mpilone.vaadin.timeline;
 
 import java.util.*;
 
+import org.mpilone.vaadin.timeline.shared.TimelineClientRpc;
 import org.mpilone.vaadin.timeline.shared.TimelineServerRpc;
 import org.mpilone.vaadin.timeline.shared.TimelineState;
 
@@ -9,11 +10,12 @@ import com.vaadin.annotations.*;
 import com.vaadin.data.Container;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.AbstractJavaScriptComponent;
-import com.vaadin.ui.Calendar;
 import com.vaadin.ui.components.calendar.ContainerEventProvider;
 import com.vaadin.ui.components.calendar.event.*;
 
 /**
+ * An implementation of the Chaps Links Timeline component
+ * (http://almende.github.io/chap-links-library/timeline.html).
  *
  * @author mpilone
  */
@@ -25,8 +27,6 @@ public class Timeline extends AbstractJavaScriptComponent implements
     CalendarEventProvider,
     CalendarEditableEventProvider {
 
-  Calendar cal;
-
   /**
    * Internal buffer of events.
    */
@@ -37,7 +37,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   private CalendarEventProvider calendarEventProvider;
 
-  private TimelineServerRpc rpc = new ServerRpcImpl();
+  private final TimelineServerRpc serverRpc = new ServerRpcImpl();
+
+  private final TimelineClientRpc clientRpc;
 
   /**
    * Internal calendar data source.
@@ -62,43 +64,35 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   public Timeline(String caption, CalendarEventProvider eventProvider) {
     setWidth("100%");
-    registerRpc(rpc);
     setCaption(caption);
+    setEventProvider(eventProvider);
+
+    registerRpc(serverRpc);
+    clientRpc = getRpcProxy(TimelineClientRpc.class);
+
+    Date start = currentCalendar.getTime();
+    currentCalendar.add(java.util.Calendar.HOUR, 8);
+    Date end = currentCalendar.getTime();
+    setVisibleChartRange(start, end);
+
 //    handlers = new HashMap<String, EventListener>();
 //    setDefaultHandlers();
 //    currentCalendar.setTime(new Date());
-    setEventProvider(eventProvider);
   }
 
   public void setStartDate(Date date) {
-    if (!getStartDate().equals(date)) {
-      markAsDirty();
-      startDate = date;
-    }
+    setVisibleChartRange(date, endDate);
   }
 
   public Date getStartDate() {
-    if (startDate == null) {
-      startDate = new Date();
-    }
-
     return startDate;
   }
 
   public void setEndDate(Date date) {
-    if (!getEndDate().equals(date)) {
-      markAsDirty();
-      endDate = date;
-    }
+    setVisibleChartRange(startDate, date);
   }
 
   public Date getEndDate() {
-    if (endDate == null) {
-      currentCalendar.setTime(startDate);
-      currentCalendar.add(java.util.Calendar.DATE, 7);
-      endDate = currentCalendar.getTime();
-    }
-
     return endDate;
   }
 
@@ -141,14 +135,32 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * @return the {@link CalendarEventProvider} currently used
+   * Returns the event provider current in use.
+   *
+   * @return the {@link CalendarEventProvider} currently in use
    */
   public CalendarEventProvider getEventProvider() {
     return calendarEventProvider;
   }
 
+  /**
+   * If true, the timeline shows a red, vertical line displaying the current
+   * time. This time can be synchronized with a server via the method
+   * setCurrentTime.
+   *
+   * @param visible true to enable the vertical time bar, false to disable
+   */
   public void setShowCurrentTime(boolean visible) {
     getState().showCurrentTime = visible;
+  }
+
+  /**
+   * Returns true if the current time is being shown on the client side.
+   *
+   * @return true if enabled
+   */
+  public boolean isShowCurrentTime() {
+    return getState().showCurrentTime;
   }
 
   @Override
@@ -173,6 +185,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   private void setupCalendarEvents() {
+    com.vaadin.ui.Calendar cal;
 
     events = getEventProvider().getEvents(startDate, endDate);
 
@@ -201,6 +214,137 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
     }
     getState().events = calendarStateEvents;
+  }
+
+  /**
+   * Sets the visible range (zoom) to the specified range. Accepts two
+   * parameters of type Date that represent the first and last times of the
+   * wanted selected visible range.
+   *
+   * @param start the start date
+   * @param end the end date
+   */
+  public void setVisibleChartRange(Date start, Date end) {
+    if (!Objects.equals(this.startDate, start) || !Objects.
+        equals(this.endDate, end)) {
+      this.startDate = start;
+      this.endDate = end;
+
+      clientRpc.setVisibleChartRange(start.getTime(), end.getTime());
+    }
+  }
+
+  /**
+   * Move the visible range such that the current time is located in the center
+   * of the timeline.
+   */
+  public void setVisibleChartRangeNow() {
+    clientRpc.setVisibleChartRangeNow();
+  }
+
+  /**
+   * Set a minimum zoom interval for the visible range in milliseconds. It will
+   * not be possible to zoom in further than this minimum.
+   *
+   * @param zoomMin the minimum zoom in milliseconds
+   */
+  public void setZoomMin(int zoomMin) {
+    getState().zoomMin = zoomMin;
+  }
+
+  /**
+   * Returns the minimum zoom interval.
+   *
+   * @return the mimimum zoom in milliseconds
+   */
+  public int getZoomMin() {
+    return getState().zoomMin;
+  }
+
+  /**
+   * Set a maximum zoom interval for the visible range in milliseconds. It will
+   * not be possible to zoom out further than this maximum.
+   *
+   * @param zoomMax the maximum zoom range
+   */
+  public void setZoomMax(int zoomMax) {
+    getState().zoomMax = zoomMax;
+  }
+
+  /**
+   * The maximim zoom interval.
+   *
+   * @return the maximum zoom interval
+   */
+  public int getZoomMax() {
+    return getState().zoomMax;
+  }
+
+  /**
+   * If true, the timeline is zoomable. When the timeline is zoomed, the
+   * rangechange event is fired.
+   *
+   * @param zoomable true to enable client side zooming, false to disable
+   */
+  public void setZoomable(boolean zoomable) {
+    getState().zoomable = zoomable;
+  }
+
+  /**
+   * Returns true if the timeline is zoomable.
+   *
+   * @return true if zoomable
+   */
+  public boolean isZoomable() {
+    return getState().zoomable;
+  }
+
+  /**
+   * If true, the events on the timeline are selectable. When an event is
+   * selected, the select event is fired.
+   *
+   * @param selectable true to enable event selection, false to disable
+   */
+  public void setSelectable(boolean selectable) {
+    getState().selectable = selectable;
+  }
+
+  /**
+   * Returns true if events on the timeline are selectable.
+   *
+   * @return true if the events on the timeline are selectable on the client
+   */
+  public boolean isSelectable() {
+    return getState().selectable;
+  }
+
+  /**
+   * If true, the timeline is movable. When the timeline moved, the rangechange
+   * events are fired.
+   *
+   * @param moveable true to enable client side moving, false to disable
+   */
+  public void setMoveable(boolean moveable) {
+    getState().moveable = moveable;
+  }
+
+  /**
+   * Returns true if the timeline is movable.
+   *
+   * @return true if the timeline is moveable on the client
+   */
+  public boolean isMoveable() {
+    return getState().moveable;
+  }
+
+  /**
+   * Adjust the current time of the timeline. This can for example be changed to
+   * match the time of a server or a time offset of another time zone.
+   *
+   * @param time the current time to set
+   */
+  public void setCurrentTime(Date time) {
+    clientRpc.setCurrentTime(time.getTime());
   }
 
   /**
@@ -314,6 +458,34 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   private class ServerRpcImpl implements TimelineServerRpc {
+
+    @Override
+    public void ackSetCurrentTime() {
+      // TODO: Implement method
+    }
+
+    @Override
+    public void rangeChanged(long start, long end) {
+      Date startDate = new Date(start);
+      Date endDate = new Date(end);
+
+      if (!Objects.equals(Timeline.this.startDate, startDate) || !Objects.
+          equals(
+              Timeline.this.endDate, endDate)) {
+        Timeline.this.startDate = startDate;
+        Timeline.this.endDate = endDate;
+
+        System.out.println("rangeChanged: " + startDate + " to " + endDate);
+        // TODO: fire an event
+      }
+    }
+
+    @Override
+    public void select(int index) {
+      System.out.println("Selected: " + index);
+
+      // TODO: fire an event
+    }
 
   }
 
