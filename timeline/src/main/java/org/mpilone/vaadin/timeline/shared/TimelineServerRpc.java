@@ -1,6 +1,9 @@
 
 package org.mpilone.vaadin.timeline.shared;
 
+
+import java.util.List;
+
 import com.vaadin.shared.communication.ServerRpc;
 
 /**
@@ -25,5 +28,5 @@ public interface TimelineServerRpc extends ServerRpc {
    */
   void rangeChanged(long start, long end);
 
-  void select(int index);
+  void select(List<String> clientKeys);
 }

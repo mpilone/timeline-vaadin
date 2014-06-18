@@ -11,15 +11,47 @@ import com.vaadin.shared.ui.JavaScriptComponentState;
  * @author mpilone
  */
 public class TimelineState extends JavaScriptComponentState {
-  public boolean showCurrentTime = true;
-  public int zoomMax = Integer.MAX_VALUE;
-  public int zoomMin = 1000;
-  public boolean updateTime = true;
-  public boolean updateGroup = true;
-  public boolean selectable = true;
-  public List<Event> events;
+  public List<Item> items;
   public List<Group> groups;
-  public boolean showCustomTime = false;
+  public Options options;
+
+  public static class Editable {
+
+    public boolean add;
+    public boolean remove;
+    public boolean updateGroup;
+    public boolean updateTime;
+  }
+
+  public static class Margin {
+
+    public int axis;
+    public int item;
+  }
+
+  public static class Options {
+
+    public String align;
+    public boolean autoResize;
+    public Editable editable;
+    public Long end;
+    public String groupOrder;
+    public Margin margin;
+    public Long max;
+    public Long min;
+    public String orientation;
+    public int padding;
+    public boolean selectable;
+    public boolean showCustomTime;
+    public boolean showCurrentTime;
+    public boolean showMajorLabels;
+    public boolean showMinorLabels;
+    public boolean stack;
+    public Long start;
+    public String type;
+    public int zoomMax;
+    public int zoomMin;
+  }
 
   public static class Group {
     public String id;
@@ -27,9 +59,8 @@ public class TimelineState extends JavaScriptComponentState {
     public String className;
   }
 
-  public static class Event {
+  public static class Item {
     public String id;
-    public int index;
     public long start;
     public long end;
     public String content;

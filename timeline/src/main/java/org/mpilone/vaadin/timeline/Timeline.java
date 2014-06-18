@@ -1,18 +1,13 @@
 package org.mpilone.vaadin.timeline;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
-import org.mpilone.vaadin.timeline.TimelineComponentEvents.EventSelect;
-import org.mpilone.vaadin.timeline.TimelineComponentEvents.EventSelectListener;
-import org.mpilone.vaadin.timeline.TimelineComponentEvents.VisibleRangeChange;
-import org.mpilone.vaadin.timeline.TimelineComponentEvents.VisibleRangeChangeListener;
 import org.mpilone.vaadin.timeline.shared.*;
 
 import com.vaadin.annotations.*;
-import com.vaadin.data.Container;
-import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.server.KeyMapper;
 import com.vaadin.ui.AbstractJavaScriptComponent;
-import com.vaadin.ui.components.calendar.ContainerEventProvider;
 import com.vaadin.ui.components.calendar.event.*;
 
 /**
@@ -23,25 +18,43 @@ import com.vaadin.ui.components.calendar.event.*;
 @StyleSheet("vis/dist/vis.min.css")
 @JavaScript({"timeline_connector.js", "vis/dist/vis.js"})
 public class Timeline extends AbstractJavaScriptComponent implements
-    CalendarEventProvider.EventSetChangeListener,
-    CalendarEvent.EventChangeListener,
-    CalendarEventProvider,
-    CalendarEditableEventProvider {
+    TimelineItemProvider, TimelineItemProvider.Editable,
+    TimelineItemProvider.ItemSetChangeListener {
 
   /**
-   * Internal buffer of events.
+   * The handler method to fire on the {@link SelectionChangeListener}.
    */
-  protected List<CalendarEvent> events;
+  static final Method SELECTION_CHANGE_METHOD;
 
   /**
-   * Internal buffer of groups.
+   * The handler method to fire on the {@link WindowRangeChangeListener}.
    */
-  protected List<TimelineGroup> groups;
+  static final Method WINDOW_RANGE_CHANGE_METHOD;
+
+  static {
+    try {
+      SELECTION_CHANGE_METHOD = SelectionChangeListener.class.getMethod(
+          "selectionChange",
+          SelectionChangeListener.SelectionChangeEvent.class);
+      WINDOW_RANGE_CHANGE_METHOD = WindowRangeChangeListener.class.getMethod(
+          "windowRangeChange",
+          WindowRangeChangeListener.WindowRangeChangeEvent.class);
+    }
+    catch (NoSuchMethodException | SecurityException ex) {
+      throw new RuntimeException("Unable to find required handler method.", ex);
+    }
+  }
+
+  private List<TimelineItem> items;
+  private HashSet<Object> selection;
+  private KeyMapper<Object> itemIdMapper;
+  private List<TimelineGroup> groups;
+  private TimelineOptions options;
 
   /**
    * The event provider.
    */
-  private CalendarEventProvider calendarEventProvider;
+  private TimelineItemProvider timelineItemProvider;
 
   private final TimelineServerRpc serverRpc = new ServerRpcImpl();
 
@@ -57,86 +70,69 @@ public class Timeline extends AbstractJavaScriptComponent implements
   private Date endDate;
 
   public Timeline() {
-    this(null, new BasicEventProvider());
+    this(null, new BasicItemProvider());
   }
 
-  public Timeline(CalendarEventProvider eventProvider) {
+  public Timeline(TimelineItemProvider eventProvider) {
     this(null, eventProvider);
   }
 
   public Timeline(String caption) {
-    this(caption, new BasicEventProvider());
+    this(caption, new BasicItemProvider());
   }
 
-  public Timeline(String caption, CalendarEventProvider eventProvider) {
+  public Timeline(String caption, TimelineItemProvider itemProvider) {
     setWidth("100%");
     setCaption(caption);
-    setEventProvider(eventProvider);
+    setItemProvider(itemProvider);
 
     registerRpc(serverRpc);
     clientRpc = getRpcProxy(TimelineClientRpc.class);
+
+    itemIdMapper = new KeyMapper<>();
+    selection = new HashSet<>();
+    options = new BasicTimelineOptions(this);
 
     Date start = currentCalendar.getTime();
     currentCalendar.add(java.util.Calendar.HOUR, 8);
     Date end = currentCalendar.getTime();
     setWindow(start, end);
-
-//    handlers = new HashMap<String, EventListener>();
-//    setDefaultHandlers();
-//    currentCalendar.setTime(new Date());
-  }
-
-  public void setStartDate(Date date) {
-    setWindow(date, endDate);
   }
 
   public Date getStartDate() {
     return startDate;
   }
 
-  public void setEndDate(Date date) {
-    setWindow(startDate, date);
-  }
-
   public Date getEndDate() {
     return endDate;
   }
 
-
   /**
    * Set the {@link CalendarEventProvider} to be used with this calendar. The
-   * EventProvider is used to query for events to show, and must be non-null. By
+   * EventProvider is used to query for items to show, and must be non-null. By
    * default a null null {@link BasicEventProvider} is used.
    *
-   * @param calendarEventProvider the calendarEventProvider to set. Cannot be
+   * @param timelineItemProvider the calendarEventProvider to set. Cannot be
    * null.
    */
-  public void setEventProvider(CalendarEventProvider calendarEventProvider) {
-    if (calendarEventProvider == null) {
+  public void setItemProvider(TimelineItemProvider timelineItemProvider) {
+    if (timelineItemProvider == null) {
       throw new IllegalArgumentException(
-          "Calendar event provider cannot be null");
+          "Timeline item provider cannot be null");
     }
 
     // remove old listener
-    if (getEventProvider() instanceof CalendarEventProvider.EventSetChangeNotifier) {
-      ((CalendarEventProvider.EventSetChangeNotifier) getEventProvider())
-          .removeEventSetChangeListener(this);
-    }
-    if (getEventProvider() instanceof CalendarEvent.EventChangeNotifier) {
-      ((CalendarEvent.EventChangeNotifier) getEventProvider())
-          .removeEventChangeListener(this);
+    if (getItemProvider() instanceof TimelineItemProvider.ItemSetChangeNotifier) {
+      ((TimelineItemProvider.ItemSetChangeNotifier) getItemProvider())
+          .removeItemSetChangeListener(this);
     }
 
-    this.calendarEventProvider = calendarEventProvider;
+    this.timelineItemProvider = timelineItemProvider;
 
     // add new listener
-    if (calendarEventProvider instanceof CalendarEventProvider.EventSetChangeNotifier) {
-      ((CalendarEventProvider.EventSetChangeNotifier) calendarEventProvider)
-          .addEventSetChangeListener(this);
-    }
-    if (calendarEventProvider instanceof CalendarEvent.EventChangeNotifier) {
-      ((CalendarEvent.EventChangeNotifier) calendarEventProvider)
-          .addEventChangeListener(this);
+    if (timelineItemProvider instanceof TimelineItemProvider.ItemSetChangeNotifier) {
+      ((TimelineItemProvider.ItemSetChangeNotifier) timelineItemProvider)
+          .addItemSetChangeListener(this);
     }
   }
 
@@ -148,56 +144,64 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void setGroups(List<TimelineGroup> groups) {
     this.groups = groups;
-    markAsDirty();
+
+    List<TimelineState.Group> stateGroups = new ArrayList<>();
+    if (groups != null) {
+      for (TimelineGroup g : groups) {
+        TimelineState.Group group = new TimelineState.Group();
+        group.className = g.getStyleName() == null ? "" : g.getStyleName();
+        group.content = g.getCaption();
+        group.id = g.getId();
+        stateGroups.add(group);
+      }
+    }
+    getState().groups = stateGroups;
+  }
+
+  public List<TimelineGroup> getGroups() {
+    return groups;
   }
 
   /**
    * Returns the event provider current in use.
    *
-   * @return the {@link CalendarEventProvider} currently in use
+   * @return the {@link TimelineItemProvider} currently in use
    */
-  public CalendarEventProvider getEventProvider() {
-    return calendarEventProvider;
+  public TimelineItemProvider getItemProvider() {
+    return timelineItemProvider;
+  }
+
+  public void deselectAll() {
+    // TODO
+  }
+
+  public void select(Collection<Object> itemIds) {
+    // TODO
+  }
+
+  public void select(Object... itemId) {
+    // TODO
+  }
+
+  public void deselect(Object... itemId) {
+    // TODO
+  }
+
+  public boolean isSelected(Object itemId) {
+    return getSelection().contains(itemId);
+  }
+
+  public Collection<Object> getSelection() {
+    return Collections.unmodifiableCollection(selection);
   }
 
   /**
-   * If true, the timeline shows a red, vertical line displaying the current
-   * time. This time can be synchronized with a server via the method
-   * setCurrentTime.
+   * Returns the current configuration options for the timeline.
    *
-   * @param visible true to enable the vertical time bar, false to disable
+   * @return the configuration options for the timeline
    */
-  public void setShowCurrentTime(boolean visible) {
-    getState().showCurrentTime = visible;
-  }
-
-  /**
-   * Returns true if the current time is being shown on the client side.
-   *
-   * @return true if enabled
-   */
-  public boolean isShowCurrentTime() {
-    return getState().showCurrentTime;
-  }
-
-  /**
-   * Show a vertical bar displaying a custom time. This line can be dragged by
-   * the user. The custom time can be utilized to show a state in the past or in
-   * the future.
-   *
-   * @param visible true to enable the vertical time bar, false to disable
-   */
-  public void setShowCustomTime(boolean visible) {
-    getState().showCustomTime = visible;
-  }
-
-  /**
-   * Returns true if the current time is being shown on the client side.
-   *
-   * @return true if enabled
-   */
-  public boolean isShowCustomTime() {
-    return getState().showCustomTime;
+  public TimelineOptions getOptions() {
+    return options;
   }
 
   @Override
@@ -206,63 +210,47 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   @Override
-  public void beforeClientResponse(boolean initial) {
-    super.beforeClientResponse(initial);
-
-    setupCalendarEvents();
+  protected TimelineState getState(boolean markAsDirty) {
+    return (TimelineState) super.getState(markAsDirty);
   }
 
   @Override
-  public void eventSetChange(
-      CalendarEventProvider.EventSetChangeEvent changeEvent) {
+  public void beforeClientResponse(boolean initial) {
+    super.beforeClientResponse(initial);
+
+    setupStateItems();
+  }
+
+  @Override
+  public void itemSetChange(
+      TimelineItemProvider.ItemSetChangeEvent changeEvent) {
     // sanity check
-    if (calendarEventProvider == changeEvent.getProvider()) {
+    if (timelineItemProvider == changeEvent.getProvider()) {
       markAsDirty();
     }
   }
 
-  private void setupCalendarEvents() {
-    com.vaadin.ui.Calendar cal;
+  private void setupStateItems() {
+    items = getItemProvider().getItems(startDate, endDate);
 
-    events = getEventProvider().getEvents(startDate, endDate);
+    itemIdMapper.removeAll();
 
-    List<TimelineState.Event> calendarStateEvents = new ArrayList<>();
-    if (events != null) {
-      for (int i = 0; i < events.size(); i++) {
-        CalendarEvent e = events.get(i);
-        TimelineState.Event event = new TimelineState.Event();
-        event.index = i;
-        event.content = e.getCaption() == null ? "" : e.getCaption();
-        event.start = e.getStart().getTime();
-        event.end = e.getEnd().getTime();
-//                event.timeFrom = df_time.format(e.getStart());
-//                event.timeTo = df_time.format(e.getEnd());
-//        event.description = e.getDescription() == null ? "" : e
-//            .getDescription();
-        event.className = e.getStyleName() == null ? "" : e
+    List<TimelineState.Item> stateItems = new ArrayList<>();
+    if (items != null) {
+      for (TimelineItem item : items) {
+        TimelineState.Item i = new TimelineState.Item();
+        i.id = itemIdMapper.key(item.getId());
+        i.content = item.getContent() == null ? "" : item.getContent();
+        i.start = item.getStart().getTime();
+        i.end = item.getEnd().getTime();
+        i.className = item.getStyleName() == null ? "" : item
             .getStyleName();
-//        event.allDay = e.isAllDay();
+        i.group = item.getGroupId();
 
-        if (e instanceof TimelineEvent) {
-          event.group = ((TimelineEvent) e).getGroup();
-        }
-
-        calendarStateEvents.add(event);
+        stateItems.add(i);
       }
     }
-    getState().events = calendarStateEvents;
-
-    List<TimelineState.Group> calendarStateGroups = new ArrayList<>();
-    if (groups != null) {
-      for (TimelineGroup g : groups) {
-        TimelineState.Group group = new TimelineState.Group();
-        group.className = g.getStyleName() == null ? "" : g.getStyleName();
-        group.content = g.getCaption();
-        group.id = g.getId();
-        calendarStateGroups.add(group);
-      }
-    }
-    getState().groups = calendarStateGroups;
+    getState().items = stateItems;
   }
 
   /**
@@ -284,101 +272,6 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Set a minimum zoom interval for the visible range in milliseconds. It will
-   * not be possible to zoom in further than this minimum.
-   *
-   * @param zoomMin the minimum zoom in milliseconds
-   */
-  public void setZoomMin(int zoomMin) {
-    getState().zoomMin = zoomMin;
-  }
-
-  /**
-   * Returns the minimum zoom interval.
-   *
-   * @return the mimimum zoom in milliseconds
-   */
-  public int getZoomMin() {
-    return getState().zoomMin;
-  }
-
-  /**
-   * Set a maximum zoom interval for the visible range in milliseconds. It will
-   * not be possible to zoom out further than this maximum.
-   *
-   * @param zoomMax the maximum zoom range
-   */
-  public void setZoomMax(int zoomMax) {
-    getState().zoomMax = zoomMax;
-  }
-
-  /**
-   * The maximim zoom interval.
-   *
-   * @return the maximum zoom interval
-   */
-  public int getZoomMax() {
-    return getState().zoomMax;
-  }
-
-  /**
-   * If true, the events on the timeline are selectable. When an event is
-   * selected, the select event is fired.
-   *
-   * @param selectable true to enable event selection, false to disable
-   */
-  public void setSelectable(boolean selectable) {
-    getState().selectable = selectable;
-  }
-
-  /**
-   * Returns true if events on the timeline are selectable.
-   *
-   * @return true if the events on the timeline are selectable on the client
-   */
-  public boolean isSelectable() {
-    return getState().selectable;
-  }
-
-  /**
-   * If true, the events on the timeline can be moved in time.
-   *
-   * @param updateTime true to enable client side moving of events in time,
-   * false to disable
-   */
-  public void setUpdateTime(boolean updateTime) {
-    getState().updateTime = updateTime;
-  }
-
-  /**
-   * Returns true if the events on the timeline can be moved in time.
-   *
-   * @return true if events are moveable on the client
-   */
-  public boolean isUpdateTime() {
-    return getState().updateTime;
-  }
-
-  /**
-   * If true, the events on the timeline can be moved between groups.
-   *
-   * @param updateGroup true to enable moving events between groups, false to
-   * disable
-   */
-  public void setUpdateGroup(boolean updateGroup) {
-    getState().updateGroup = updateGroup;
-  }
-
-  /**
-   * Returns true if the events on the timeline can be moved between groups.
-   *
-   * @return true if events can be moved between groups on the client
-   */
-  public boolean isUpdateGroup() {
-    return getState().updateGroup;
-  }
-
-  /**
    * Adjust the custom time of the timeline. Adjust the custom time bar. Only
    * applicable when the option showCustomTime is true.
    *
@@ -388,103 +281,80 @@ public class Timeline extends AbstractJavaScriptComponent implements
     clientRpc.setCustomTime(time.getTime());
   }
 
-  /**
-   * Sets a container as a data source for the events in the calendar.
-   * Equivalent for doing
-   * {@code Timeline.setEventProvider(new ContainerEventProvider(container))}
-   *
-   * Use this method if you are adding a container which uses the default
-   * property ids like {@link BeanItemContainer} for instance. If you are using
-   * custom properties instead use
-   * {@link Timeline#setContainerDataSource(com.vaadin.data.Container.Indexed, Object, Object, Object, Object, Object)}
-   *
-   * Please note that the container must be sorted by date!
-   *
-   * @param container The container to use as a datasource
-   */
-  public void setContainerDataSource(Container.Indexed container) {
-    ContainerEventProvider provider = new ContainerEventProvider(container);
-   
-    setEventProvider(provider);
-  }
-
-  /**
-   * Sets a container as a data source for the events in the calendar.
-   * Equivalent for doing
-   * <code>Calendar.setEventProvider(new ContainerEventProvider(container))</code>
-   *
-   * Please note that the container must be sorted by date!
-   *
-   * @param container The container to use as a data source
-   * @param captionProperty The property that has the caption, null if no
-   * caption property is present
-   * @param descriptionProperty The property that has the description, null if
-   * no description property is present
-   * @param startDateProperty The property that has the starting date
-   * @param endDateProperty The property that has the ending date
-   * @param styleNameProperty The property that has the stylename, null if no
-   * stylname property is present
-   */
-  public void setContainerDataSource(Container.Indexed container,
-      Object captionProperty, Object descriptionProperty,
-      Object startDateProperty, Object endDateProperty,
-      Object styleNameProperty) {
-    ContainerEventProvider provider = new ContainerEventProvider(container);
-    provider.setCaptionProperty(captionProperty);
-    provider.setDescriptionProperty(descriptionProperty);
-    provider.setStartDateProperty(startDateProperty);
-    provider.setEndDateProperty(endDateProperty);
-    provider.setStyleNameProperty(styleNameProperty);
-    
-    setEventProvider(provider);
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see
-   * com.vaadin.addon.calendar.event.CalendarEventProvider#getEvents(java.
-   * util.Date, java.util.Date)
-   */
+//  /**
+//   * Sets a container as a data source for the items in the calendar.
+//   * Equivalent for doing
+//   * {@code Timeline.setItemProvider(new ContainerEventProvider(container))}
+//   *
+//   * Use this method if you are adding a container which uses the default
+//   * property ids like {@link BeanItemContainer} for instance. If you are using
+//   * custom properties instead use
+//   * {@link Timeline#setContainerDataSource(com.vaadin.data.Container.Indexed, Object, Object, Object, Object, Object)}
+//   *
+//   * Please note that the container must be sorted by date!
+//   *
+//   * @param container The container to use as a datasource
+//   */
+//  public void setContainerDataSource(Container.Indexed container) {
+//    ContainerEventProvider provider = new ContainerEventProvider(container);
+//
+//    setItemProvider(provider);
+//  }
+//  /**
+//   * Sets a container as a data source for the items in the calendar.
+//   * Equivalent for doing
+//   * <code>Calendar.setItemProvider(new ContainerEventProvider(container))</code>
+//   *
+//   * Please note that the container must be sorted by date!
+//   *
+//   * @param container The container to use as a data source
+//   * @param captionProperty The property that has the caption, null if no
+//   * caption property is present
+//   * @param descriptionProperty The property that has the description, null if
+//   * no description property is present
+//   * @param startDateProperty The property that has the starting date
+//   * @param endDateProperty The property that has the ending date
+//   * @param styleNameProperty The property that has the stylename, null if no
+//   * stylname property is present
+//   */
+//  public void setContainerDataSource(Container.Indexed container,
+//      Object captionProperty, Object descriptionProperty,
+//      Object startDateProperty, Object endDateProperty,
+//      Object styleNameProperty) {
+//    ContainerEventProvider provider = new ContainerEventProvider(container);
+//    provider.setCaptionProperty(captionProperty);
+//    provider.setDescriptionProperty(descriptionProperty);
+//    provider.setStartDateProperty(startDateProperty);
+//    provider.setEndDateProperty(endDateProperty);
+//    provider.setStyleNameProperty(styleNameProperty);
+//
+//    setItemProvider(provider);
+//  }
   @Override
-  public List<CalendarEvent> getEvents(Date startDate, Date endDate) {
-    return getEventProvider().getEvents(startDate, endDate);
+  public List<TimelineItem> getItems(Date startDate, Date endDate) {
+    return getItemProvider().getItems(startDate, endDate);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see
-   * com.vaadin.addon.calendar.event.CalendarEditableEventProvider#addEvent
-   * (com.vaadin.addon.calendar.event.CalendarEvent)
-   */
   @Override
-  public void addEvent(CalendarEvent event) {
-    if (getEventProvider() instanceof CalendarEditableEventProvider) {
-      CalendarEditableEventProvider provider =
-          (CalendarEditableEventProvider) getEventProvider();
-      provider.addEvent(event);
+  public void addItem(TimelineItem item) {
+    if (getItemProvider() instanceof TimelineItemProvider.Editable) {
+      TimelineItemProvider.Editable provider =
+          (TimelineItemProvider.Editable) getItemProvider();
+      provider.addItem(item);
       markAsDirty();
     }
     else {
       throw new UnsupportedOperationException(
-          "Event provider does not support adding events");
+          "Item provider does not support adding events");
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see
-   * com.vaadin.addon.calendar.event.CalendarEditableEventProvider#removeEvent
-   * (com.vaadin.addon.calendar.event.CalendarEvent)
-   */
   @Override
-  public void removeEvent(CalendarEvent event) {
-    if (getEventProvider() instanceof CalendarEditableEventProvider) {
-      CalendarEditableEventProvider provider =
-          (CalendarEditableEventProvider) getEventProvider();
-      provider.removeEvent(event);
+  public void removeItem(TimelineItem item) {
+    if (getItemProvider() instanceof TimelineItemProvider.Editable) {
+      TimelineItemProvider.Editable provider =
+          (TimelineItemProvider.Editable) getItemProvider();
+      provider.removeItem(item);
       markAsDirty();
     }
     else {
@@ -493,50 +363,49 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
   }
 
-  @Override
-  public void eventChange(CalendarEvent.EventChangeEvent eventChangeEvent) {
-    markAsDirty();
-  }
-
   /**
-   * Adds the given listener for {@link EventSelect} events.
+   * Adds the given listener for
+   * {@link SelectionChangeListener.SelectionChangeEvent} items.
    *
    * @param listener the listener to add
    */
-  public void addEventSelectListener(EventSelectListener listener) {
-    addListener(EventSelect.class, listener,
-        TimelineComponentEvents.EVENT_SELECT_METHOD);
+  public void addSelectionChangeListener(SelectionChangeListener listener) {
+    addListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
+        SELECTION_CHANGE_METHOD);
   }
 
   /**
-   * Adds the given listener for {@link EventSelect} events.
+   * Adds the given listener for
+   * {@link SelectionChangeListener.SelectionChangeEvent} items.
    *
    * @param listener the listener to add
    */
-  public void removeEventSelectListener(EventSelectListener listener) {
-    removeListener(EventSelect.class, listener,
-        TimelineComponentEvents.EVENT_SELECT_METHOD);
+  public void removeEventSelectListener(SelectionChangeListener listener) {
+    removeListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
+        SELECTION_CHANGE_METHOD);
   }
 
   /**
-   * Adds the given listener for {@link VisibleRangeChange} events.
+   * Adds the given listener for
+   * {@link WindowRangeChangeListener.WindowRangeChangeEvent} items.
    *
    * @param listener the listener to add
    */
-  public void addVisibleRangeChangeListener(VisibleRangeChangeListener listener) {
-    addListener(VisibleRangeChange.class, listener,
-        TimelineComponentEvents.VISIBLE_RANGE_CHANGE_METHOD);
+  public void addWindowRangeChangeListener(WindowRangeChangeListener listener) {
+    addListener(WindowRangeChangeListener.WindowRangeChangeEvent.class, listener,
+        WINDOW_RANGE_CHANGE_METHOD);
   }
 
   /**
-   * Adds the given listener for {@link VisibleRangeChange} events.
+   * Adds the given listener for
+   * {@link WindowRangeChangeListener.WindowRangeChangeEvent} items.
    *
    * @param listener the listener to add
    */
-  public void removeVisibleChangeListenerListener(
-      VisibleRangeChangeListener listener) {
-    removeListener(VisibleRangeChange.class, listener,
-        TimelineComponentEvents.VISIBLE_RANGE_CHANGE_METHOD);
+  public void removeWindowChangeListenerListener(
+      WindowRangeChangeListener listener) {
+    removeListener(WindowRangeChangeListener.WindowRangeChangeEvent.class,
+        listener, WINDOW_RANGE_CHANGE_METHOD);
   }
 
   /**
@@ -562,25 +431,35 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
         Timeline.this.markAsDirty();
 
-        VisibleRangeChange evt =
-            new VisibleRangeChange(Timeline.this, startDate, endDate);
+        WindowRangeChangeListener.WindowRangeChangeEvent evt =
+            new WindowRangeChangeListener.WindowRangeChangeEvent(Timeline.this,
+                startDate, endDate);
         fireEvent(evt);
       }
     }
 
     @Override
-    public void select(int index) {
-      System.out.println("Selected: " + index);
+    public void select(List<String> clientKeys) {
 
-      EventSelect evt;
-      if (index == -1 || events.size() <= index) {
-        evt = new EventSelect(Timeline.this, null);
+      Set<Object> newSelection = new HashSet<>();
+
+      for (String clientKey : clientKeys) {
+        newSelection.add(itemIdMapper.get(clientKey));
+      }
+
+      if (!newSelection.equals(selection)) {
+        SelectionChangeListener.SelectionChangeEvent evt =
+            new SelectionChangeListener.SelectionChangeEvent(Timeline.this,
+                selection,
+                newSelection);
+
+        selection = new HashSet<>(newSelection);
+        fireEvent(evt);
       }
       else {
-        evt = new EventSelect(Timeline.this, events.get(index));
+        selection = new HashSet<>(newSelection);
       }
-
-      fireEvent(evt);
     }
   }
+
 }

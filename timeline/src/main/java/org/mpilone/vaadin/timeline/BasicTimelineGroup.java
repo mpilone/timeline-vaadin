@@ -27,6 +27,7 @@ public class BasicTimelineGroup implements TimelineGroup {
     return caption;
   }
 
+  @Override
   public String getStyleName() {
     return styleName;
   }

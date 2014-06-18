@@ -64,29 +64,32 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
     var state = this.getState();
 
-    console_log("State change! Events: " + state.events.length);
+    console_log("State change! Events: " + state.items.length);
 
-    var options = {
-      "editable": {
-        "add": false,
-        "updateTime": !state.readOnly && state.updateTime,
-        "updateGroup": !state.readOnly && state.updateGroup,
-        "remove": false
-      },
-      "groupOrder": "caption",
-      "orientation": "top",
-      "selectable": state.selectable,
-      "showCurrentTime": state.showCurrentTime,
-      "showCustomTime": state.showCustomTime,
-      "type": "rangeoverflow",
-      "width": "100%",
-      "zoomMax": state.zoomMax,
-      "zoomMin": state.zoomMin
-    };
+//    var options = {
+//      "editable": {
+//        "add": false,
+//        "updateTime": !state.readOnly && state.updateTime,
+//        "updateGroup": !state.readOnly && state.updateGroup,
+//        "remove": false
+//      },
+////      "groupOrder": "caption",
+//      "orientation": "top",
+//      "selectable": state.selectable,
+//      "showCurrentTime": state.showCurrentTime,
+//      "showCustomTime": state.showCustomTime,
+//      "type": "rangeoverflow",
+//      "width": "100%",
+//      "zoomMax": state.zoomMax,
+//      "zoomMin": state.zoomMin
+//    };
 
-    var events = [];
-    for (var i = 0; i < state.events.length; ++i) {
-      events.push(state.events[i]);
+    // We have to copy the values into a new array because Timeline uses 
+    // instanceof to check for an array and it doesn't work for the GWT 
+    // created arrays. Stupid JavaScript and broken operations.
+    var items = [];
+    for (var i = 0; i < state.items.length; ++i) {
+      items.push(state.items[i]);
     }
     
     var groups = [];
@@ -95,9 +98,9 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     }
 
 try {
-    timeline.setOptions(options);
     timeline.setGroups(groups);
-    timeline.setItems(events);
+    timeline.setItems(items);
+    timeline.setOptions(state.options);
   }
   catch (ex) {
     alert("Got here 2!");
@@ -118,14 +121,8 @@ try {
     rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
   });
   
-  timeline.on('select', function() {
-    var selected = timeline.getSelection();
-    if (selected && selected.length >= 1) {
-      rpcProxy.select(selected[0].row);
-    }
-    else {
-      rpcProxy.select(-1);
-    }
+  timeline.on('select', function(evt) {
+      rpcProxy.select(evt.items);
   });
   
   }
