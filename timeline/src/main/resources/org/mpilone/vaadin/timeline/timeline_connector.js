@@ -40,40 +40,21 @@ org_mpilone_vaadin_timeline_Timeline = function() {
  * @param {type} time
  * @returns {undefined}
  */
-  this.setCurrentTime = function(time) {
-    timeline.setCurrentTime(new Date(time));
+  this.setCustomTime = function(time) {
+    timeline.setCustomTime(new Date(time));
 
-    rpcProxy.ackSetCurrentTime();
+//    rpcProxy.ackSetCurrentTime();
   };
 
   /**
    * Sets the visible range (zoom) to the specified range.
    * 
-   * @param {Number} start the start time in millis or -1
-   * @param {Number} end the end time in millis or -1
+   * @param {Number} start the start time in millis
+   * @param {Number} end the end time in millis
    * @returns {undefined}
    */
-  this.setVisibleChartRange = function(start, end) {
-    var startDate = start === -1 ? null : new Date(start);
-    var endDate = end === -1 ? null : new Date(end);
-    
-    timeline.setVisibleChartRange(startDate, endDate);
-  };
-  
-  /**
-   * Move the visible range such that the current time is located in the 
-   * center of the timeline. 
-   * 
-   * @returns {undefined}
-   */
-  this.setVisibleChartRangeNow = function() {
-    timeline.setVisibleChartRangeNow();
-    
-    var range = timeline.getVisibleChartRange();
-    
-    // Notify the server that the range changed. We have to do that here 
-    // because the range is calculated dynamically on the client side.
-    rpcProxy.rangeChanged(range.start.getTime(), range.end.getTime());
+  this.setWindow = function(start, end) {
+    timeline.setWindow(new Date(start), new Date(end));
   };
 
   /*
@@ -86,21 +67,41 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     console_log("State change! Events: " + state.events.length);
 
     var options = {
-      "axisOnTop": true,
-      "editable": !state.readOnly,
-      "groupsOrder": true,
-      "height": "auto",
-      "moveable": state.moveable,
+      "editable": {
+        "add": false,
+        "updateTime": !state.readOnly && state.updateTime,
+        "updateGroup": !state.readOnly && state.updateGroup,
+        "remove": false
+      },
+      "groupOrder": "caption",
+      "orientation": "top",
       "selectable": state.selectable,
       "showCurrentTime": state.showCurrentTime,
-      "style": "box",
+      "showCustomTime": state.showCustomTime,
+      "type": "rangeoverflow",
       "width": "100%",
-      "zoomable": state.zoomable,
       "zoomMax": state.zoomMax,
       "zoomMin": state.zoomMin
     };
 
-    timeline.draw(state.events, options);
+    var events = [];
+    for (var i = 0; i < state.events.length; ++i) {
+      events.push(state.events[i]);
+    }
+    
+    var groups = [];
+    for (var i = 0; i < state.groups.length; ++i) {
+      groups.push(state.groups[i]);
+    }
+
+try {
+    timeline.setOptions(options);
+    timeline.setGroups(groups);
+    timeline.setItems(events);
+  }
+  catch (ex) {
+    alert("Got here 2!");
+  }
   };
 
   // -----------------------
@@ -109,13 +110,15 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
   console_log("Creating timeline.");
 
-  timeline = new links.Timeline(element);
-  
-  links.events.addListener(timeline, 'rangechanged', function(evt) {
+try {
+  timeline = new vis.Timeline(element, [], {});
+
+
+   timeline.on('rangechanged', function(evt) {
     rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
   });
   
-  links.events.addListener(timeline, 'select', function() {
+  timeline.on('select', function() {
     var selected = timeline.getSelection();
     if (selected && selected.length >= 1) {
       rpcProxy.select(selected[0].row);
@@ -125,8 +128,8 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     }
   });
   
-  links.events.addListener(timeline, 'add', function() {
-    // Add is not currently supported.
-    timeline.cancelAdd();
-  });
+  }
+catch (ex) {
+alert("Got here 1");  
+}
 };

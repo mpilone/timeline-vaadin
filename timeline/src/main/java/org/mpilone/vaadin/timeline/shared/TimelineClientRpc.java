@@ -11,38 +11,21 @@ import com.vaadin.shared.communication.ClientRpc;
 public interface TimelineClientRpc extends ClientRpc {
 
   /**
-   * Sets the current time to be displayed on the client.
+   * Sets the custom time to be displayed on the client.
    *
-   * @param time the current time in milliseconds past the epoch
+   * @param time the custom time in milliseconds past the epoch
    */
-   void setCurrentTime(long time);
-
-  /**
-   * Move the visible range such that the current time is located in the center
-   * of the timeline. This method does not trigger a rangechange event.
-   */
-  void setVisibleChartRangeNow();
+  void setCustomTime(long time);
 
   /**
    * Sets the visible range (zoom) to the specified range. Accepts two
    * parameters of type Date that represent the first and last times of the
-   * wanted selected visible range. Set start to -1 to include everything from
-   * the earliest date to end; set end to -1 to include everything from start to
-   * the last date.
+   * wanted selected visible range.
    *
-   * @param start the start time or -1
-   * @param end the end time or -1
+   * @param start the start time
+   * @param end the end time
    */
-  void setVisibleChartRange(long start, long end);
+  void setWindow(long start, long end);
 
-  /**
-   * Move the timeline the given movefactor to the left or right. Start and end
-   * date will be adjusted, and the timeline will be redrawn. For example, try
-   * moveFactor = 0.1 or -0.1. moveFactor is a Number that determines the moving
-   * amount. A positive value will move right, a negative value will move left.
-   *
-   * @param moveFactor
-   */
-  void move(double moveFactor);
 
 }

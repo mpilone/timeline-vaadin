@@ -16,13 +16,12 @@ import com.vaadin.ui.components.calendar.ContainerEventProvider;
 import com.vaadin.ui.components.calendar.event.*;
 
 /**
- * An implementation of the CHAP Links Timeline component
- * (http://almende.github.io/chap-links-library/timeline.html).
+ * An implementation of the vis.js Timeline component (http://visjs.org/).
  *
  * @author mpilone
  */
-@StyleSheet("timeline/timeline.css")
-@JavaScript({"timeline_connector.js", "timeline/timeline-min.js"})
+@StyleSheet("vis/dist/vis.min.css")
+@JavaScript({"timeline_connector.js", "vis/dist/vis.js"})
 public class Timeline extends AbstractJavaScriptComponent implements
     CalendarEventProvider.EventSetChangeListener,
     CalendarEvent.EventChangeListener,
@@ -33,6 +32,11 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * Internal buffer of events.
    */
   protected List<CalendarEvent> events;
+
+  /**
+   * Internal buffer of groups.
+   */
+  protected List<TimelineGroup> groups;
 
   /**
    * The event provider.
@@ -75,7 +79,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
     Date start = currentCalendar.getTime();
     currentCalendar.add(java.util.Calendar.HOUR, 8);
     Date end = currentCalendar.getTime();
-    setVisibleChartRange(start, end);
+    setWindow(start, end);
 
 //    handlers = new HashMap<String, EventListener>();
 //    setDefaultHandlers();
@@ -83,7 +87,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   public void setStartDate(Date date) {
-    setVisibleChartRange(date, endDate);
+    setWindow(date, endDate);
   }
 
   public Date getStartDate() {
@@ -91,7 +95,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   public void setEndDate(Date date) {
-    setVisibleChartRange(startDate, date);
+    setWindow(startDate, date);
   }
 
   public Date getEndDate() {
@@ -137,6 +141,17 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
+   * Sets the groups used to group together items with the same group ID
+   * reference into rows.
+   *
+   * @param groups the groups to set or null to clear the groups
+   */
+  public void setGroups(List<TimelineGroup> groups) {
+    this.groups = groups;
+    markAsDirty();
+  }
+
+  /**
    * Returns the event provider current in use.
    *
    * @return the {@link CalendarEventProvider} currently in use
@@ -163,6 +178,26 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public boolean isShowCurrentTime() {
     return getState().showCurrentTime;
+  }
+
+  /**
+   * Show a vertical bar displaying a custom time. This line can be dragged by
+   * the user. The custom time can be utilized to show a state in the past or in
+   * the future.
+   *
+   * @param visible true to enable the vertical time bar, false to disable
+   */
+  public void setShowCustomTime(boolean visible) {
+    getState().showCustomTime = visible;
+  }
+
+  /**
+   * Returns true if the current time is being shown on the client side.
+   *
+   * @return true if enabled
+   */
+  public boolean isShowCustomTime() {
+    return getState().showCustomTime;
   }
 
   @Override
@@ -216,6 +251,18 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
     }
     getState().events = calendarStateEvents;
+
+    List<TimelineState.Group> calendarStateGroups = new ArrayList<>();
+    if (groups != null) {
+      for (TimelineGroup g : groups) {
+        TimelineState.Group group = new TimelineState.Group();
+        group.className = g.getStyleName() == null ? "" : g.getStyleName();
+        group.content = g.getCaption();
+        group.id = g.getId();
+        calendarStateGroups.add(group);
+      }
+    }
+    getState().groups = calendarStateGroups;
   }
 
   /**
@@ -226,22 +273,14 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * @param start the start date
    * @param end the end date
    */
-  public void setVisibleChartRange(Date start, Date end) {
+  public void setWindow(Date start, Date end) {
     if (!Objects.equals(this.startDate, start) || !Objects.
         equals(this.endDate, end)) {
       this.startDate = start;
       this.endDate = end;
 
-      clientRpc.setVisibleChartRange(start.getTime(), end.getTime());
+      clientRpc.setWindow(start.getTime(), end.getTime());
     }
-  }
-
-  /**
-   * Move the visible range such that the current time is located in the center
-   * of the timeline.
-   */
-  public void setVisibleChartRangeNow() {
-    clientRpc.setVisibleChartRangeNow();
   }
 
   /**
@@ -283,25 +322,6 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * If true, the timeline is zoomable. When the timeline is zoomed, the
-   * rangechange event is fired.
-   *
-   * @param zoomable true to enable client side zooming, false to disable
-   */
-  public void setZoomable(boolean zoomable) {
-    getState().zoomable = zoomable;
-  }
-
-  /**
-   * Returns true if the timeline is zoomable.
-   *
-   * @return true if zoomable
-   */
-  public boolean isZoomable() {
-    return getState().zoomable;
-  }
-
-  /**
    * If true, the events on the timeline are selectable. When an event is
    * selected, the select event is fired.
    *
@@ -321,32 +341,51 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * If true, the timeline is movable. When the timeline moved, the rangechange
-   * events are fired.
+   * If true, the events on the timeline can be moved in time.
    *
-   * @param moveable true to enable client side moving, false to disable
+   * @param updateTime true to enable client side moving of events in time,
+   * false to disable
    */
-  public void setMoveable(boolean moveable) {
-    getState().moveable = moveable;
+  public void setUpdateTime(boolean updateTime) {
+    getState().updateTime = updateTime;
   }
 
   /**
-   * Returns true if the timeline is movable.
+   * Returns true if the events on the timeline can be moved in time.
    *
-   * @return true if the timeline is moveable on the client
+   * @return true if events are moveable on the client
    */
-  public boolean isMoveable() {
-    return getState().moveable;
+  public boolean isUpdateTime() {
+    return getState().updateTime;
   }
 
   /**
-   * Adjust the current time of the timeline. This can for example be changed to
-   * match the time of a server or a time offset of another time zone.
+   * If true, the events on the timeline can be moved between groups.
+   *
+   * @param updateGroup true to enable moving events between groups, false to
+   * disable
+   */
+  public void setUpdateGroup(boolean updateGroup) {
+    getState().updateGroup = updateGroup;
+  }
+
+  /**
+   * Returns true if the events on the timeline can be moved between groups.
+   *
+   * @return true if events can be moved between groups on the client
+   */
+  public boolean isUpdateGroup() {
+    return getState().updateGroup;
+  }
+
+  /**
+   * Adjust the custom time of the timeline. Adjust the custom time bar. Only
+   * applicable when the option showCustomTime is true.
    *
    * @param time the current time to set
    */
-  public void setCurrentTime(Date time) {
-    clientRpc.setCurrentTime(time.getTime());
+  public void setCustomTime(Date time) {
+    clientRpc.setCustomTime(time.getTime());
   }
 
   /**

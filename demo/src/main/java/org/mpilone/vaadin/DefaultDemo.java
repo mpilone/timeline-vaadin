@@ -1,5 +1,6 @@
 package org.mpilone.vaadin;
 
+import java.util.*;
 import java.util.Calendar;
 
 import org.mpilone.vaadin.timeline.*;
@@ -47,7 +48,13 @@ public class DefaultDemo extends VerticalLayout {
       cal.add(Calendar.MINUTE, 10);
     }
 
+    List<TimelineGroup> groups = new ArrayList<>(GROUPS.length);
+    for (String groupId : GROUPS) {
+      groups.add(new BasicTimelineGroup(groupId, groupId, null));
+    }
+
     Timeline t = new Timeline(new ContainerEventProvider(container));
+    t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
     t.addEventSelectListener(new TimelineComponentEvents.EventSelectListener() {
       @Override
@@ -82,7 +89,11 @@ public class DefaultDemo extends VerticalLayout {
     Button btn = new Button("Go to Now", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
-        timeline.setVisibleChartRangeNow();
+        Calendar cal = Calendar.getInstance();
+        Date start = cal.getTime();
+        cal.add(Calendar.HOUR, 3);
+        Date end = cal.getTime();
+        timeline.setWindow(start, end);
       }
     });
     controlLayout.addComponent(btn);
@@ -112,7 +123,7 @@ public class DefaultDemo extends VerticalLayout {
     Button btn = new Button("Apply Visible Range", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
-        timeline.setVisibleChartRange(startDt.getValue(), endDt.getValue());
+        timeline.setWindow(startDt.getValue(), endDt.getValue());
       }
     });
     controlLayout.addComponent(btn);
@@ -159,6 +170,16 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(chk);
 
+     chk = new CheckBox("Show Custom Time");
+    chk.setValue(timeline.isShowCustomTime());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.setShowCustomTime((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
     chk = new CheckBox("Read-only");
     chk.setValue(timeline.isReadOnly());
     chk.addValueChangeListener(new Property.ValueChangeListener() {
@@ -179,22 +200,22 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(chk);
 
-    chk = new CheckBox("Moveable");
-    chk.setValue(timeline.isMoveable());
+    chk = new CheckBox("Update Time");
+    chk.setValue(timeline.isUpdateTime());
     chk.addValueChangeListener(new Property.ValueChangeListener() {
       @Override
       public void valueChange(Property.ValueChangeEvent event) {
-        timeline.setMoveable((Boolean) event.getProperty().getValue());
+        timeline.setUpdateTime((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);
 
-    chk = new CheckBox("Zoomable");
-    chk.setValue(timeline.isZoomable());
+    chk = new CheckBox("Update Group");
+    chk.setValue(timeline.isUpdateGroup());
     chk.addValueChangeListener(new Property.ValueChangeListener() {
       @Override
       public void valueChange(Property.ValueChangeEvent event) {
-        timeline.setZoomable((Boolean) event.getProperty().getValue());
+        timeline.setUpdateGroup((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);
