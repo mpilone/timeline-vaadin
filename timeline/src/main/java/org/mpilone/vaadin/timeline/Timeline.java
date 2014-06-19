@@ -17,7 +17,7 @@ import com.vaadin.ui.AbstractJavaScriptComponent;
  * @author mpilone
  */
 @StyleSheet("vis/dist/vis.min.css")
-@JavaScript({"timeline_connector.js", "vis/dist/vis.js"})
+@JavaScript({"timeline_connector.js", "vis/dist/vis.min.js"})
 public class Timeline extends AbstractJavaScriptComponent implements
     TimelineItemProvider, TimelineItemProvider.Editable,
     TimelineItemProvider.ItemSetChangeListener {

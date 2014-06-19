@@ -39,6 +39,7 @@ public class TimelineState extends JavaScriptComponentState {
     public Margin margin;
     public Long max;
     public Long min;
+    public boolean moveable;
     public String orientation;
     public int padding;
     public boolean selectable;
@@ -49,6 +50,7 @@ public class TimelineState extends JavaScriptComponentState {
     public boolean stack;
     public Long start;
     public String type;
+    public boolean zoomable;
     public int zoomMax;
     public int zoomMin;
   }

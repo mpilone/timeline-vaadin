@@ -33,18 +33,15 @@ public class DefaultDemo extends VerticalLayout {
       groups.add(new BasicTimelineGroup(groupId, groupId, null));
     }
 
-    Timeline t = new Timeline();
+    final Timeline t = new Timeline();
     t.getOptions().setOrientation(TimelineOptions.TimeAxisOrientation.TOP);
-    t.getOptions().setType(TimelineOptions.ItemType.POINT);
+    t.getOptions().setType(TimelineOptions.ItemType.RANGEOVERFLOW);
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
     t.addSelectionChangeListener(new SelectionChangeListener() {
       @Override
       public void selectionChange(SelectionChangeEvent event) {
-//        CalendarEvent calEvent = event.getCalendarEvent();
-//        System.out.println("Event select: " + (calEvent == null ?
-//            "<no selection>" : calEvent.getContent()));
-        System.out.println("Selection changed.");
+        System.out.println("Selection changed: " + t.getSelection());
       }
     });
     t.addWindowRangeChangeListener(new WindowRangeChangeListener() {
@@ -81,6 +78,47 @@ public class DefaultDemo extends VerticalLayout {
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
 
+    // We should be able to just set the type in the options and it would apply
+    // to all items but it seems like a bug in Timeline that a default type is
+    // used before the global type.
+    // See https://github.com/almende/vis/issues/172
+    // Item type
+    final ComboBox typeCmb = new ComboBox("Item Type");
+    typeCmb.setNullSelectionAllowed(false);
+//    typeCmb.setImmediate(true);
+    typeCmb.setFilteringMode(FilteringMode.OFF);
+    for (TimelineOptions.ItemType itemType : TimelineOptions.ItemType.values()) {
+      typeCmb.addItem(itemType);
+    }
+    typeCmb.setValue(timeline.getOptions().getType());
+    typeCmb.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.getOptions().setType((TimelineOptions.ItemType) event.
+            getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(typeCmb);
+
+    // Item alignment
+    final ComboBox alignCmb = new ComboBox("Item Alignment");
+    alignCmb.setNullSelectionAllowed(false);
+    alignCmb.setImmediate(true);
+    alignCmb.setFilteringMode(FilteringMode.OFF);
+    for (TimelineOptions.ItemAlignment a : TimelineOptions.ItemAlignment.
+        values()) {
+      alignCmb.addItem(a);
+    }
+    alignCmb.setValue(timeline.getOptions().getAlign());
+    alignCmb.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.getOptions().setAlign((TimelineOptions.ItemAlignment) event.
+            getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(alignCmb);
+
     // Build items
     final TextField numItemsTxt = new TextField();
     numItemsTxt.setValue("100");
@@ -101,6 +139,7 @@ public class DefaultDemo extends VerticalLayout {
           evt.setEnd(cal.getTime());
           evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
           evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
+          evt.setType((TimelineOptions.ItemType) typeCmb.getValue());
           provider.addItem(evt);
 
           cal.setTime(evt.getStart());
@@ -111,43 +150,6 @@ public class DefaultDemo extends VerticalLayout {
       }
     });
     controlLayout.addComponent(btn);
-
-    // Item type
-    ComboBox cmb = new ComboBox("Item Type");
-    cmb.setNullSelectionAllowed(false);
-    cmb.setImmediate(true);
-    cmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.ItemType itemType : TimelineOptions.ItemType.values()) {
-      cmb.addItem(itemType);
-    }
-    cmb.setValue(timeline.getOptions().getType());
-    cmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.getOptions().setType((TimelineOptions.ItemType) event.
-            getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(cmb);
-
-    // Item type
-    cmb = new ComboBox("Item Alignment");
-    cmb.setNullSelectionAllowed(false);
-    cmb.setImmediate(true);
-    cmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.ItemAlignment a : TimelineOptions.ItemAlignment.
-        values()) {
-      cmb.addItem(a);
-    }
-    cmb.setValue(timeline.getOptions().getAlign());
-    cmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.getOptions().setAlign((TimelineOptions.ItemAlignment) event.
-            getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(cmb);
 
     return controlLayout;
   }
@@ -332,6 +334,28 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setSelectable((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Movable");
+    chk.setValue(timeline.getOptions().isMoveable());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setMoveable((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Zoomable");
+    chk.setValue(timeline.getOptions().isZoomable());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setZoomable((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);

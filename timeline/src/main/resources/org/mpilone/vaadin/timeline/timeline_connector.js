@@ -64,6 +64,16 @@ org_mpilone_vaadin_timeline_Timeline = function() {
   this.setWindow = function(start, end) {
     timeline.setWindow(new Date(start), new Date(end));
   };
+  
+  /**
+   * Called when the component is removed from the UI.
+   * 
+   * @returns {undefined}
+   */
+  this.onUnregister = function() {
+    timeline.destroy();
+    timeline = null;
+  };
 
   /*
    * Called when the state on the server side changes.
@@ -91,7 +101,6 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // We should probably be smarter about updating the groups and items 
     // already in the timeline rather than blindly replacing all the items.
     timeline.setGroups(groups);
-    timeline.setItems([]);
     timeline.setItems(items);
     timeline.setOptions(state.options);
   };
@@ -117,7 +126,7 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     rangeChangeTimerId = window.setTimeout(function() {
       rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
       rangeChangeTimerId = -1;
-    }, 1000);
+    }, 800);
   });
 
   timeline.on('select', function(evt) {

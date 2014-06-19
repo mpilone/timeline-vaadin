@@ -38,11 +38,12 @@ class StateMappingOptions implements TimelineOptions {
     o.margin.item = 10;
     o.max = null;
     o.min = null;
+    o.moveable = true;
     o.orientation =
         TimelineOptions.TimeAxisOrientation.BOTTOM.name().toLowerCase();
     o.padding = 5;
     o.selectable = true;
-    o.showCurrentTime = false;
+    o.showCurrentTime = true;
     o.showCustomTime = false;
     o.showMajorLabels = true;
     o.showMinorLabels = true;
@@ -51,6 +52,7 @@ class StateMappingOptions implements TimelineOptions {
     o.type = TimelineOptions.ItemType.BOX.name().toLowerCase();
     o.zoomMax = Integer.MAX_VALUE;
     o.zoomMin = 10;
+    o.zoomable = true;
     getState().options = o;
   }
 
@@ -325,6 +327,26 @@ class StateMappingOptions implements TimelineOptions {
   @Override
   public void setZoomMin(int zoomMin) {
     getState().options.zoomMin = zoomMin;
+  }
+
+  @Override
+  public boolean isMoveable() {
+    return getState(false).options.moveable;
+  }
+
+  @Override
+  public void setMoveable(boolean moveable) {
+    getState().options.moveable = moveable;
+  }
+
+  @Override
+  public boolean isZoomable() {
+    return getState(false).options.zoomable;
+  }
+
+  @Override
+  public void setZoomable(boolean zoomable) {
+    getState().options.zoomable = zoomable;
   }
 
 }

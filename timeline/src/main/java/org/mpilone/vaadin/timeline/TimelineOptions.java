@@ -11,6 +11,14 @@ import java.util.Date;
  */
 public interface TimelineOptions {
 
+  public boolean isMoveable();
+
+  public void setMoveable(boolean moveable);
+
+  public boolean isZoomable();
+
+  public void setZoomable(boolean zoomable);
+
   public boolean isSelectable();
 
   public void setSelectable(boolean selectable);
