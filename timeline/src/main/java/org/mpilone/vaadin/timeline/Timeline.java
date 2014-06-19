@@ -134,6 +134,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
       ((TimelineItemProvider.ItemSetChangeNotifier) timelineItemProvider)
           .addItemSetChangeListener(this);
     }
+
+    markAsDirty();
   }
 
   /**

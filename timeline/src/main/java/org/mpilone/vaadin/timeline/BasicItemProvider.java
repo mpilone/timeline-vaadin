@@ -36,6 +36,12 @@ public class BasicItemProvider extends EventRouter implements
   @Override
   public List<TimelineItem> getItems(Date startDate, Date endDate) {
 
+    long window = endDate.getTime() - startDate.getTime();
+    long preloadWindow = (long) (window * .1);
+
+    startDate = new Date(startDate.getTime() - preloadWindow);
+    endDate = new Date(endDate.getTime() + preloadWindow);
+
     List<TimelineItem> result = new ArrayList<>();
 
     for (TimelineItem item : items) {

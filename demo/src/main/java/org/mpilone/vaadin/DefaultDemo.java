@@ -27,30 +27,32 @@ public class DefaultDemo extends VerticalLayout {
     setMargin(true);
     setSpacing(true);
 
-    Calendar cal = Calendar.getInstance();
-
-    BasicItemProvider container =
-        new BasicItemProvider();
-
-    for (int i = 0; i < 50; ++i) {
-      BasicTimelineItem evt = new BasicTimelineItem();
-      evt.setStart(cal.getTime());
-      cal.add(Calendar.MINUTE, (int) (10 + Math.random() * 50));
-      evt.setEnd(cal.getTime());
-      evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
-      evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
-      container.addItem(evt);
-
-      cal.setTime(evt.getStart());
-      cal.add(Calendar.MINUTE, 10);
-    }
+//    Calendar cal = Calendar.getInstance();
+//
+//    BasicItemProvider container =
+//        new BasicItemProvider();
+//
+//    int numItems = 100;
+//
+//    for (int i = 0; i < numItems; ++i) {
+//      BasicTimelineItem evt = new BasicTimelineItem();
+//      evt.setStart(cal.getTime());
+//      cal.add(Calendar.MINUTE, (int) (10 + Math.random() * 50));
+//      evt.setEnd(cal.getTime());
+//      evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
+//      evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
+//      container.addItem(evt);
+//
+//      cal.setTime(evt.getStart());
+//      cal.add(Calendar.MINUTE, 10);
+//    }
 
     List<TimelineGroup> groups = new ArrayList<>(GROUPS.length);
     for (String groupId : GROUPS) {
       groups.add(new BasicTimelineGroup(groupId, groupId, null));
     }
 
-    Timeline t = new Timeline(container);
+    Timeline t = new Timeline();
     t.getOptions().setOrientation(TimelineOptions.TimeAxisOrientation.TOP);
     t.getOptions().setType(TimelineOptions.ItemType.RANGEOVERFLOW);
     t.setGroups(groups);
@@ -85,26 +87,53 @@ public class DefaultDemo extends VerticalLayout {
     controlLayout.setWidth("100%");
     addComponent(controlLayout);
 
-    Button btn = new Button("Go to Now", new Button.ClickListener() {
-      @Override
-      public void buttonClick(Button.ClickEvent event) {
-        Calendar cal = Calendar.getInstance();
-        Date start = cal.getTime();
-        cal.add(Calendar.HOUR, 3);
-        Date end = cal.getTime();
-        timeline.setWindow(start, end);
-      }
-    });
-    controlLayout.addComponent(btn);
-
-    controlLayout.addComponent(buildTimeControl(timeline));
+    controlLayout.addComponent(buildTimeControls(timeline));
     controlLayout.addComponent(buildToggleControls(timeline));
-    controlLayout.addComponent(buildZoomControl(timeline));
+    controlLayout.addComponent(buildEditControls(timeline));
+    controlLayout.addComponent(buildZoomControls(timeline));
+    controlLayout.addComponent(buildDataControls(timeline));
 
     return controlLayout;
   }
 
-  private Component buildTimeControl(final Timeline timeline) {
+  private Component buildDataControls(final Timeline timeline) {
+    VerticalLayout controlLayout = new VerticalLayout();
+    controlLayout.setSpacing(true);
+
+    final TextField numItemsTxt = new TextField();
+    numItemsTxt.setValue("100");
+    controlLayout.addComponent(numItemsTxt);
+
+    Button btn = new Button("Rebuild Data", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        BasicItemProvider provider = new BasicItemProvider();
+
+        Calendar cal = Calendar.getInstance();
+        int numItems = Integer.parseInt(numItemsTxt.getValue());
+
+        for (int i = 0; i < numItems; ++i) {
+          BasicTimelineItem evt = new BasicTimelineItem();
+          evt.setStart(cal.getTime());
+          cal.add(Calendar.MINUTE, (int) (10 + Math.random() * 50));
+          evt.setEnd(cal.getTime());
+          evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
+          evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
+          provider.addItem(evt);
+
+          cal.setTime(evt.getStart());
+          cal.add(Calendar.MINUTE, 10);
+        }
+
+        timeline.setItemProvider(provider);
+      }
+    });
+    controlLayout.addComponent(btn);
+
+    return controlLayout;
+  }
+
+  private Component buildTimeControls(final Timeline timeline) {
 
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
@@ -119,7 +148,7 @@ public class DefaultDemo extends VerticalLayout {
     endDt.setValue(timeline.getEndDate());
     controlLayout.addComponent(endDt);
 
-    Button btn = new Button("Apply Visible Range", new Button.ClickListener() {
+    Button btn = new Button("Set Window", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
         timeline.setWindow(startDt.getValue(), endDt.getValue());
@@ -127,14 +156,27 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    btn = new Button("Set Window to Now", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        Calendar cal = Calendar.getInstance();
+        Date start = cal.getTime();
+        cal.add(Calendar.HOUR, 3);
+        Date end = cal.getTime();
+        timeline.setWindow(start, end);
+      }
+    });
+    controlLayout.addComponent(btn);
+
     return controlLayout;
   }
 
-  private Component buildZoomControl(final Timeline timeline) {
+  private Component buildZoomControls(final Timeline timeline) {
 
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
 
+    // ZoomMin, ZoomMax
     final TextField zoomMin = new TextField();
     zoomMin.setValue(String.valueOf(timeline.getOptions().getZoomMin() / 1000));
     controlLayout.addComponent(zoomMin);
@@ -152,6 +194,88 @@ public class DefaultDemo extends VerticalLayout {
       }
     });
     controlLayout.addComponent(btn);
+
+    // Min/max
+    final DateField minDt = new DateField();
+    minDt.setResolution(Resolution.SECOND);
+    minDt.setValue(timeline.getStartDate());
+    controlLayout.addComponent(minDt);
+
+    final DateField maxDt = new DateField();
+    maxDt.setResolution(Resolution.SECOND);
+    maxDt.setValue(timeline.getEndDate());
+    controlLayout.addComponent(maxDt);
+
+    btn = new Button("Apply Min/Max", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setMin(minDt.getValue());
+        options.setMax(maxDt.getValue());
+      }
+    });
+    controlLayout.addComponent(btn);
+
+    return controlLayout;
+  }
+
+  private Component buildEditControls(final Timeline timeline) {
+    VerticalLayout controlLayout = new VerticalLayout();
+    controlLayout.setSpacing(true);
+
+    CheckBox chk = new CheckBox("Read-only");
+    chk.setValue(timeline.isReadOnly());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.setReadOnly((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Edit Update Time");
+    chk.setValue(timeline.getOptions().isEditUpdateTime());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setEditUpdateTime((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Edit Update Group");
+    chk.setValue(timeline.getOptions().isEditUpdateGroup());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setEditUpdateGroup((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Edit Add");
+    chk.setValue(timeline.getOptions().isEditAdd());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setEditAdd((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Edit Remove");
+    chk.setValue(timeline.getOptions().isEditRemove());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setEditRemove((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
 
     return controlLayout;
   }
@@ -182,16 +306,6 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(chk);
 
-    chk = new CheckBox("Read-only");
-    chk.setValue(timeline.isReadOnly());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.setReadOnly((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
-
     chk = new CheckBox("Selectable");
     chk.setValue(timeline.getOptions().isSelectable());
     chk.addValueChangeListener(new Property.ValueChangeListener() {
@@ -199,28 +313,6 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setSelectable((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
-
-    chk = new CheckBox("Edit Update Time");
-    chk.setValue(timeline.getOptions().isEditUpdateTime());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        TimelineOptions options = timeline.getOptions();
-        options.setEditUpdateTime((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
-
-    chk = new CheckBox("Edit Update Group");
-    chk.setValue(timeline.getOptions().isEditUpdateGroup());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        TimelineOptions options = timeline.getOptions();
-        options.setEditUpdateGroup((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);

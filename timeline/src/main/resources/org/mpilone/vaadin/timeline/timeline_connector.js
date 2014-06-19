@@ -26,6 +26,14 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    */
   var timeline;
 
+  /**
+   * The ID of the timer currently running to inform the server side of 
+   * a range change.
+   * 
+   * @type Number
+   */
+  var rangeChangeTimerId = -1;
+
   /*
    * Simple method for logging to the JS console if one is available.
    */
@@ -35,11 +43,11 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     }
   }
 
-/**
- * 
- * @param {type} time
- * @returns {undefined}
- */
+  /**
+   * 
+   * @param {type} time
+   * @returns {undefined}
+   */
   this.setCustomTime = function(time) {
     timeline.setCustomTime(new Date(time));
 
@@ -64,47 +72,27 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
     var state = this.getState();
 
-    console_log("State change! Events: " + state.items.length);
-
-//    var options = {
-//      "editable": {
-//        "add": false,
-//        "updateTime": !state.readOnly && state.updateTime,
-//        "updateGroup": !state.readOnly && state.updateGroup,
-//        "remove": false
-//      },
-////      "groupOrder": "caption",
-//      "orientation": "top",
-//      "selectable": state.selectable,
-//      "showCurrentTime": state.showCurrentTime,
-//      "showCustomTime": state.showCustomTime,
-//      "type": "rangeoverflow",
-//      "width": "100%",
-//      "zoomMax": state.zoomMax,
-//      "zoomMin": state.zoomMin
-//    };
+    console_log("State change! Items: " + state.items.length);
 
     // We have to copy the values into a new array because Timeline uses 
     // instanceof to check for an array and it doesn't work for the GWT 
-    // created arrays. Stupid JavaScript and broken operations.
+    // created arrays. Stupid JavaScript and broken operations. This should 
+    // be fixed in the next version of Timeline (1.2?).
     var items = [];
     for (var i = 0; i < state.items.length; ++i) {
       items.push(state.items[i]);
     }
-    
+
     var groups = [];
     for (var i = 0; i < state.groups.length; ++i) {
       groups.push(state.groups[i]);
     }
 
-try {
+    // We should probably be smarter about updating the groups and items 
+    // already in the timeline rather than blindly replacing all the items.
     timeline.setGroups(groups);
     timeline.setItems(items);
     timeline.setOptions(state.options);
-  }
-  catch (ex) {
-    alert("Got here 2!");
-  }
   };
 
   // -----------------------
@@ -113,20 +101,25 @@ try {
 
   console_log("Creating timeline.");
 
-try {
   timeline = new vis.Timeline(element, [], {});
 
+  timeline.on('rangechanged', function(evt) {
+    if (rangeChangeTimerId !== -1) {
+      window.clearTimeout(rangeChangeTimerId);
+    }
+    rangeChangeTimerId = -1;
 
-   timeline.on('rangechanged', function(evt) {
-    rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
+    // Delay the call to the server because we only care about the last 
+    // update, not all the changes in between. This is similar to the 
+    // @Delay annotation on the ServerRpc interface but that isn't supported 
+    // in a JavaScript component.
+    rangeChangeTimerId = window.setTimeout(function() {
+      rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
+      rangeChangeTimerId = -1;
+    }, 1000);
   });
-  
+
   timeline.on('select', function(evt) {
-      rpcProxy.select(evt.items);
+    rpcProxy.select(evt.items);
   });
-  
-  }
-catch (ex) {
-alert("Got here 1");  
-}
 };
