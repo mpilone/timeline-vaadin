@@ -3,6 +3,9 @@ package org.mpilone.vaadin.timeline;
 import java.util.Date;
 
 /**
+ * The various options that can be configured on the timeline. Refer to
+ * http://visjs.org/docs/timeline.html#Configuration_Options for detailed
+ * documentation.
  *
  * @author mpilone
  */
@@ -128,6 +131,9 @@ public interface TimelineOptions {
 
   public void setZoomMin(int zoomMin);
 
+  /**
+   * The orientation (i.e. location) of the time axis on the timeline.
+   */
   public enum TimeAxisOrientation {
 
     BOTTOM,
@@ -135,6 +141,7 @@ public interface TimelineOptions {
   }
 
   /**
+   * The type of the item which controls how it is rendered on the timeline.
    *
    * @author mpilone
    */
@@ -146,8 +153,10 @@ public interface TimelineOptions {
     RANGEOVERFLOW
   }
 
+  /**
+   * The alignment of items with type {@link ItemType#BOX}.
+   */
   public enum ItemAlignment {
-
     LEFT,
     CENTER,
     RIGHT

@@ -1,14 +1,26 @@
 
 package org.mpilone.vaadin.timeline;
 
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.EventObject;
 
+import com.vaadin.util.ReflectTools;
+
 /**
+ * A listener to be notified about visible window range change events.
  *
  * @author mpilone
  */
 public interface WindowRangeChangeListener {
+
+  /**
+   * The event handling method on the {@link WindowRangeChangeListener}.
+   */
+  static final Method WINDOW_RANGE_CHANGE_METHOD = ReflectTools.findMethod(
+      WindowRangeChangeListener.class,
+      "windowRangeChange",
+      WindowRangeChangeListener.WindowRangeChangeEvent.class);
 
   /**
    * Called when the visible range changes on the timeline.
@@ -28,7 +40,7 @@ public interface WindowRangeChangeListener {
     /**
      * Constructs the event.
      *
-     * @param source the source timeline component
+     * @param source the timeline component that generated the event
      * @param startDate the start date of the visible time range
      * @param endDate the end date of the visible time range
      */

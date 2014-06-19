@@ -1,17 +1,18 @@
 package org.mpilone.vaadin.timeline;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 import org.mpilone.vaadin.timeline.shared.*;
 
 import com.vaadin.annotations.*;
+import com.vaadin.data.Container;
 import com.vaadin.server.KeyMapper;
 import com.vaadin.ui.AbstractJavaScriptComponent;
-import com.vaadin.ui.components.calendar.event.*;
 
 /**
- * An implementation of the vis.js Timeline component (http://visjs.org/).
+ * An implementation of the vis.js Timeline component (http://visjs.org/). The
+ * timeline displays {@link TimelineItem}s provided by a
+ * {@link TimelineItemProvider} on a scrollable and zoomable interface.
  *
  * @author mpilone
  */
@@ -21,77 +22,63 @@ public class Timeline extends AbstractJavaScriptComponent implements
     TimelineItemProvider, TimelineItemProvider.Editable,
     TimelineItemProvider.ItemSetChangeListener {
 
-  /**
-   * The handler method to fire on the {@link SelectionChangeListener}.
-   */
-  static final Method SELECTION_CHANGE_METHOD;
-
-  /**
-   * The handler method to fire on the {@link WindowRangeChangeListener}.
-   */
-  static final Method WINDOW_RANGE_CHANGE_METHOD;
-
-  static {
-    try {
-      SELECTION_CHANGE_METHOD = SelectionChangeListener.class.getMethod(
-          "selectionChange",
-          SelectionChangeListener.SelectionChangeEvent.class);
-      WINDOW_RANGE_CHANGE_METHOD = WindowRangeChangeListener.class.getMethod(
-          "windowRangeChange",
-          WindowRangeChangeListener.WindowRangeChangeEvent.class);
-    }
-    catch (NoSuchMethodException | SecurityException ex) {
-      throw new RuntimeException("Unable to find required handler method.", ex);
-    }
-  }
-
   private List<TimelineItem> items;
   private HashSet<Object> selection;
   private KeyMapper<Object> itemIdMapper;
   private List<TimelineGroup> groups;
   private TimelineOptions options;
-
-  /**
-   * The event provider.
-   */
-  private TimelineItemProvider timelineItemProvider;
-
+  private TimelineItemProvider provider;
   private final TimelineServerRpc serverRpc = new ServerRpcImpl();
-
   private final TimelineClientRpc clientRpc;
-
-  /**
-   * Internal calendar data source.
-   */
   protected java.util.Calendar currentCalendar = java.util.Calendar
       .getInstance();
-
   private Date startDate;
   private Date endDate;
 
+  /**
+   * Constructs the timeline with no caption and an empty item provider.
+   */
   public Timeline() {
     this(null, new BasicItemProvider());
   }
 
-  public Timeline(TimelineItemProvider eventProvider) {
-    this(null, eventProvider);
+  /**
+   * Constructs the timeline with no caption.
+   *
+   * @param provider the provider of timeline items
+   */
+  public Timeline(TimelineItemProvider provider) {
+    this(null, provider);
   }
 
+  /**
+   * Constructs the timeline with an empty item provider.
+   *
+   * @param caption the caption of the component
+   */
   public Timeline(String caption) {
     this(caption, new BasicItemProvider());
   }
 
-  public Timeline(String caption, TimelineItemProvider itemProvider) {
+  /**
+   * Constructs the timeline. The timeline will default to showing an 8 hour
+   * period starting "now" unless {@link #setWindow(java.util.Date, java.util.Date)
+   * } is called.
+   *
+   * @param caption the caption of the component
+   * @param provider the provider of timeline items
+   */
+  public Timeline(String caption, TimelineItemProvider provider) {
     setWidth("100%");
     setCaption(caption);
-    setItemProvider(itemProvider);
+    setItemProvider(provider);
 
     registerRpc(serverRpc);
     clientRpc = getRpcProxy(TimelineClientRpc.class);
 
     itemIdMapper = new KeyMapper<>();
     selection = new HashSet<>();
-    options = new BasicTimelineOptions(this);
+    options = new StateMappingOptions(this);
 
     Date start = currentCalendar.getTime();
     currentCalendar.add(java.util.Calendar.HOUR, 8);
@@ -99,40 +86,54 @@ public class Timeline extends AbstractJavaScriptComponent implements
     setWindow(start, end);
   }
 
-  public Date getStartDate() {
+  /**
+   * Returns the start date of the visible window. The date may be different
+   * from the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date)
+   * } if the data or options causes a different window to be visible.
+   *
+   * @return the window start date
+   */
+  public Date getWindowStart() {
     return startDate;
   }
 
-  public Date getEndDate() {
+  /**
+   * Returns the end date of the visible window. The date may be different from
+   * the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date)
+   * } if the data or options causes a different window to be visible.
+   *
+   * @return the window end date
+   */
+  public Date getWindowEnd() {
     return endDate;
   }
 
   /**
-   * Set the {@link CalendarEventProvider} to be used with this calendar. The
-   * EventProvider is used to query for items to show, and must be non-null. By
-   * default a null null {@link BasicEventProvider} is used.
+   * Set the {@link TimelineItemProvider} to be used with this timeline. The
+   * provider is used to query for items to show. By default a
+   * {@link BasicItemProvider} is used.
    *
-   * @param timelineItemProvider the calendarEventProvider to set. Cannot be
-   * null.
+   * @param provider the provider to set. Cannot be null
    */
-  public void setItemProvider(TimelineItemProvider timelineItemProvider) {
-    if (timelineItemProvider == null) {
-      throw new IllegalArgumentException(
-          "Timeline item provider cannot be null");
+  public void setItemProvider(TimelineItemProvider provider) {
+    if (provider == null) {
+      provider = new BasicItemProvider();
     }
 
-    // remove old listener
-    if (getItemProvider() instanceof TimelineItemProvider.ItemSetChangeNotifier) {
-      ((TimelineItemProvider.ItemSetChangeNotifier) getItemProvider())
-          .removeItemSetChangeListener(this);
-    }
+    if (provider != this.provider) {
+      // remove old listener
+      if (getItemProvider() instanceof TimelineItemProvider.ItemSetChangeNotifier) {
+        ((TimelineItemProvider.ItemSetChangeNotifier) getItemProvider())
+            .removeItemSetChangeListener(this);
+      }
 
-    this.timelineItemProvider = timelineItemProvider;
+      this.provider = provider;
 
-    // add new listener
-    if (timelineItemProvider instanceof TimelineItemProvider.ItemSetChangeNotifier) {
-      ((TimelineItemProvider.ItemSetChangeNotifier) timelineItemProvider)
-          .addItemSetChangeListener(this);
+      // add new listener
+      if (provider instanceof TimelineItemProvider.ItemSetChangeNotifier) {
+        ((TimelineItemProvider.ItemSetChangeNotifier) provider)
+            .addItemSetChangeListener(this);
+      }
     }
 
     markAsDirty();
@@ -152,7 +153,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
       for (TimelineGroup g : groups) {
         TimelineState.Group group = new TimelineState.Group();
         group.className = g.getStyleName() == null ? "" : g.getStyleName();
-        group.content = g.getCaption();
+        group.content = g.getContent();
         group.id = g.getId();
         stateGroups.add(group);
       }
@@ -160,6 +161,11 @@ public class Timeline extends AbstractJavaScriptComponent implements
     getState().groups = stateGroups;
   }
 
+  /**
+   * Returns the groups used to group together items with the same group ID.
+   *
+   * @return the groups or null if none have been specified
+   */
   public List<TimelineGroup> getGroups() {
     return groups;
   }
@@ -170,35 +176,75 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * @return the {@link TimelineItemProvider} currently in use
    */
   public TimelineItemProvider getItemProvider() {
-    return timelineItemProvider;
+    return provider;
   }
 
+  /**
+   * Deselects all selected items. A
+   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
+   * are deselected.
+   */
   public void deselectAll() {
     // TODO
   }
 
+  /**
+   * Selects the items with given IDs. A
+   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
+   * are selected. That is, if the items exist and are not selected).
+   *
+   * @param itemIds the IDs of the items to select
+   */
   public void select(Collection<Object> itemIds) {
     // TODO
   }
 
+  /**
+   * Selects the items with given IDs. A
+   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
+   * are selected. That is, if the items exist and are not selected).
+   *
+   * @param itemId the ID of the items to select
+   */
   public void select(Object... itemId) {
     // TODO
   }
 
+  /**
+   * Deselects the items with given IDs. A
+   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
+   * are deselected. That is, if the items exist and were selected).
+   *
+   * @param itemId the ID of the items to deselect
+   */
   public void deselect(Object... itemId) {
     // TODO
   }
 
+  /**
+   * Returns true if the given item ID is selected.
+   *
+   * @param itemId the ID of the item to check
+   *
+   * @return true if selected, false if not selected or not found
+   */
   public boolean isSelected(Object itemId) {
     return getSelection().contains(itemId);
   }
 
+  /**
+   * Returns an unmodifiable collection of item IDs that are selected or an
+   * empty collection if nothing is selected.
+   *
+   * @return the collection of selected item IDs
+   */
   public Collection<Object> getSelection() {
     return Collections.unmodifiableCollection(selection);
   }
 
   /**
-   * Returns the current configuration options for the timeline.
+   * Returns the current configuration options for the timeline. The options
+   * returned can be modified and are effective immediately.
    *
    * @return the configuration options for the timeline
    */
@@ -227,11 +273,14 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void itemSetChange(
       TimelineItemProvider.ItemSetChangeEvent changeEvent) {
     // sanity check
-    if (timelineItemProvider == changeEvent.getProvider()) {
+    if (provider == changeEvent.getSource()) {
       markAsDirty();
     }
   }
 
+  /**
+   * Sets up the items to be returned to the client in the timeline state.
+   */
   private void setupStateItems() {
     items = getItemProvider().getItems(startDate, endDate);
 
@@ -248,6 +297,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
         i.className = item.getStyleName() == null ? "" : item
             .getStyleName();
         i.group = item.getGroupId();
+        i.type = item.getType() == null ? null : item.getType().name().
+            toLowerCase();
 
         stateItems.add(i);
       }
@@ -283,55 +334,23 @@ public class Timeline extends AbstractJavaScriptComponent implements
     clientRpc.setCustomTime(time.getTime());
   }
 
-//  /**
-//   * Sets a container as a data source for the items in the calendar.
-//   * Equivalent for doing
-//   * {@code Timeline.setItemProvider(new ContainerEventProvider(container))}
-//   *
-//   * Use this method if you are adding a container which uses the default
-//   * property ids like {@link BeanItemContainer} for instance. If you are using
-//   * custom properties instead use
-//   * {@link Timeline#setContainerDataSource(com.vaadin.data.Container.Indexed, Object, Object, Object, Object, Object)}
-//   *
-//   * Please note that the container must be sorted by date!
-//   *
-//   * @param container The container to use as a datasource
-//   */
-//  public void setContainerDataSource(Container.Indexed container) {
-//    ContainerEventProvider provider = new ContainerEventProvider(container);
-//
-//    setItemProvider(provider);
-//  }
-//  /**
-//   * Sets a container as a data source for the items in the calendar.
-//   * Equivalent for doing
-//   * <code>Calendar.setItemProvider(new ContainerEventProvider(container))</code>
-//   *
-//   * Please note that the container must be sorted by date!
-//   *
-//   * @param container The container to use as a data source
-//   * @param captionProperty The property that has the caption, null if no
-//   * caption property is present
-//   * @param descriptionProperty The property that has the description, null if
-//   * no description property is present
-//   * @param startDateProperty The property that has the starting date
-//   * @param endDateProperty The property that has the ending date
-//   * @param styleNameProperty The property that has the stylename, null if no
-//   * stylname property is present
-//   */
-//  public void setContainerDataSource(Container.Indexed container,
-//      Object captionProperty, Object descriptionProperty,
-//      Object startDateProperty, Object endDateProperty,
-//      Object styleNameProperty) {
-//    ContainerEventProvider provider = new ContainerEventProvider(container);
-//    provider.setCaptionProperty(captionProperty);
-//    provider.setDescriptionProperty(descriptionProperty);
-//    provider.setStartDateProperty(startDateProperty);
-//    provider.setEndDateProperty(endDateProperty);
-//    provider.setStyleNameProperty(styleNameProperty);
-//
-//    setItemProvider(provider);
-//  }
+  /**
+   * Sets a container as a data source for the items in the timeline. This is a
+   * convenience method for doing
+   * {@code Timeline.setItemProvider(new ContainerItemProvider(container))}. Use
+   * this method if you are adding a container which uses the default property
+   * IDs and cannot support the sorting optimization of the
+   * {@link ContainerItemProvider}. If you are using custom properties or
+   * sorting, use
+   * {@link #setItemProvider(org.mpilone.vaadin.timeline.TimelineItemProvider)}
+   * with a configured {@link ContainerItemProvider}.
+   *
+   * @param container the container to use as a datasource
+   */
+  public void setContainerDataSource(Container container) {
+    setItemProvider(new ContainerItemProvider(container));
+  }
+
   @Override
   public List<TimelineItem> getItems(Date startDate, Date endDate) {
     return getItemProvider().getItems(startDate, endDate);
@@ -373,7 +392,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void addSelectionChangeListener(SelectionChangeListener listener) {
     addListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
-        SELECTION_CHANGE_METHOD);
+        SelectionChangeListener.SELECTION_CHANGE_METHOD);
   }
 
   /**
@@ -384,7 +403,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void removeEventSelectListener(SelectionChangeListener listener) {
     removeListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
-        SELECTION_CHANGE_METHOD);
+        SelectionChangeListener.SELECTION_CHANGE_METHOD);
   }
 
   /**
@@ -395,7 +414,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void addWindowRangeChangeListener(WindowRangeChangeListener listener) {
     addListener(WindowRangeChangeListener.WindowRangeChangeEvent.class, listener,
-        WINDOW_RANGE_CHANGE_METHOD);
+        WindowRangeChangeListener.WINDOW_RANGE_CHANGE_METHOD);
   }
 
   /**
@@ -407,7 +426,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void removeWindowChangeListenerListener(
       WindowRangeChangeListener listener) {
     removeListener(WindowRangeChangeListener.WindowRangeChangeEvent.class,
-        listener, WINDOW_RANGE_CHANGE_METHOD);
+        listener, WindowRangeChangeListener.WINDOW_RANGE_CHANGE_METHOD);
   }
 
   /**
@@ -463,5 +482,4 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
     }
   }
-
 }

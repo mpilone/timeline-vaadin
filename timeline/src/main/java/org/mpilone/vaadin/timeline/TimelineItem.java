@@ -60,12 +60,9 @@ public interface TimelineItem {
   public ItemType getType();
 
   /**
-   * <p>
-   * Gets style name of event. In the client, style name will be set to the
-   * event's element class name and can be styled by CSS
-   * </p>
+   * The optional CSS style name(s) to be applied to the group.
    *
-   * @return Style name.
+   * @return the CSS style name(s)
    */
   public String getStyleName();
 }

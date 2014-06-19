@@ -1,60 +1,50 @@
 
 package org.mpilone.vaadin.timeline;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
-import com.vaadin.event.EventRouter;
 
 /**
+ * An item provider that simply keeps a list of {@link TimelineItem}s in memory.
  *
  * @author mpilone
  */
-public class BasicItemProvider extends EventRouter implements
+public class BasicItemProvider extends AbstractItemProvider implements
     TimelineItemProvider,
     TimelineItemProvider.ItemSetChangeNotifier,
     TimelineItemProvider.Editable {
 
-  private static final Method CHANGE_METHOD;
-
-  static {
-    try {
-      CHANGE_METHOD = ItemSetChangeListener.class.getMethod("itemSetChange",
-          ItemSetChangeEvent.class);
-    }
-    catch (NoSuchMethodException | SecurityException ex) {
-      throw new RuntimeException("Unable to find listener method.", ex);
-    }
-  }
-
   private final List<TimelineItem> items;
 
+  /**
+   * Constructs the provider.
+   */
   public BasicItemProvider() {
     this.items = new ArrayList<>();
   }
 
   @Override
-  public List<TimelineItem> getItems(Date startDate, Date endDate) {
-
-    long window = endDate.getTime() - startDate.getTime();
-    long preloadWindow = (long) (window * .1);
-
-    startDate = new Date(startDate.getTime() - preloadWindow);
-    endDate = new Date(endDate.getTime() + preloadWindow);
+  public List<TimelineItem> doGetItems(Date startDate, Date endDate) {
 
     List<TimelineItem> result = new ArrayList<>();
 
-    for (TimelineItem item : items) {
-      boolean endInRange = true;
+    for (TimelineItem ti : items) {
 
-      if (item.getEnd() != null) {
-        endInRange = item.getEnd().compareTo(startDate) >= 0;
+      Date start = ti.getStart();
+      Date end = ti.getEnd();
+
+      boolean startInRange = start.compareTo(endDate) <= 0;
+      boolean endInRange = true;
+      if (end != null) {
+        endInRange = end.compareTo(startDate) >= 0;
+      }
+      else {
+        // No end date. Assume point data.
+        startInRange = startInRange && start.compareTo(startDate) >= 0;
       }
 
-      boolean startInRange = item.getStart().compareTo(endDate) <= 0;
-
       if (startInRange && endInRange) {
-        result.add(item);
+        result.add(ti);
       }
     }
 
@@ -62,23 +52,17 @@ public class BasicItemProvider extends EventRouter implements
   }
 
   @Override
-  public void addItemSetChangeListener(ItemSetChangeListener listener) {
-    addListener(ItemSetChangeEvent.class, listener, CHANGE_METHOD);
-  }
-
-  @Override
-  public void removeItemSetChangeListener(ItemSetChangeListener listener) {
-    removeListener(ItemSetChangeEvent.class, listener, CHANGE_METHOD);
-  }
-
-  @Override
   public void addItem(TimelineItem item) {
     items.add(item);
+
+    fireEvent(new ItemSetChangeEvent(this));
   }
 
   @Override
   public void removeItem(TimelineItem item) {
     items.remove(item);
+
+    fireEvent(new ItemSetChangeEvent(this));
   }
 
 }

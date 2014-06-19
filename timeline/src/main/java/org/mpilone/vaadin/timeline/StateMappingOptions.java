@@ -6,13 +6,22 @@ import java.util.Date;
 import org.mpilone.vaadin.timeline.shared.TimelineState;
 
 /**
+ * An implementation of timeline options that maps all the options into the
+ * {@link TimelineState}. This class is normally instantiated and used
+ * internally by the {@link Timeline}.
  *
  * @author mpilone
  */
-class BasicTimelineOptions implements TimelineOptions {
+class StateMappingOptions implements TimelineOptions {
   private final Timeline timeline;
 
-  public BasicTimelineOptions(Timeline timeline) {
+  /**
+   * Constructs the options which will map all state changes to the state of the
+   * given timeline.
+   *
+   * @param timeline the timeline to modify
+   */
+  public StateMappingOptions(Timeline timeline) {
     this.timeline = timeline;
     TimelineState.Options o = new TimelineState.Options();
     o.align = TimelineOptions.ItemAlignment.CENTER.name().toLowerCase();
@@ -45,10 +54,22 @@ class BasicTimelineOptions implements TimelineOptions {
     getState().options = o;
   }
 
+  /**
+   * Returns the state of the timeline that options should be mapped to.
+   *
+   * @return the state of the timeline
+   */
   private TimelineState getState() {
     return timeline.getState();
   }
 
+  /**
+   * Returns the state of the timeline that options should be mapped to.
+   *
+   * @param markAsDirty true to mark the state as dirty, false otherwise
+   *
+   * @return the state of the timeline
+   */
   private TimelineState getState(boolean markAsDirty) {
     return timeline.getState(markAsDirty);
   }
@@ -69,7 +90,8 @@ class BasicTimelineOptions implements TimelineOptions {
 
   @Override
   public TimelineOptions.ItemAlignment getAlign() {
-    return TimelineOptions.ItemAlignment.valueOf(getState(false).options.align);
+    return TimelineOptions.ItemAlignment.valueOf(getState(false).options.align.
+        toUpperCase());
   }
 
   @Override
@@ -193,7 +215,8 @@ class BasicTimelineOptions implements TimelineOptions {
 
   @Override
   public TimelineOptions.TimeAxisOrientation getOrientation() {
-    return TimelineOptions.TimeAxisOrientation.valueOf(getState(false).options.orientation);
+    return TimelineOptions.TimeAxisOrientation.valueOf(
+        getState(false).options.orientation.toUpperCase());
   }
 
   @Override
@@ -275,7 +298,8 @@ class BasicTimelineOptions implements TimelineOptions {
 
   @Override
   public TimelineOptions.ItemType getType() {
-    return TimelineOptions.ItemType.valueOf(getState(false).options.type);
+    return TimelineOptions.ItemType.valueOf(getState(false).options.type.
+        toUpperCase());
   }
 
   @Override

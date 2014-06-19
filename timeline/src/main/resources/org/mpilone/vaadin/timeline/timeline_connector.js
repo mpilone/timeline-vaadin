@@ -91,6 +91,7 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // We should probably be smarter about updating the groups and items 
     // already in the timeline rather than blindly replacing all the items.
     timeline.setGroups(groups);
+    timeline.setItems([]);
     timeline.setItems(items);
     timeline.setOptions(state.options);
   };
