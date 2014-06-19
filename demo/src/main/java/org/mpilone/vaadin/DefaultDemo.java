@@ -6,6 +6,7 @@ import java.util.Calendar;
 import org.mpilone.vaadin.timeline.*;
 
 import com.vaadin.data.Property;
+import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
 
@@ -27,26 +28,6 @@ public class DefaultDemo extends VerticalLayout {
     setMargin(true);
     setSpacing(true);
 
-//    Calendar cal = Calendar.getInstance();
-//
-//    BasicItemProvider container =
-//        new BasicItemProvider();
-//
-//    int numItems = 100;
-//
-//    for (int i = 0; i < numItems; ++i) {
-//      BasicTimelineItem evt = new BasicTimelineItem();
-//      evt.setStart(cal.getTime());
-//      cal.add(Calendar.MINUTE, (int) (10 + Math.random() * 50));
-//      evt.setEnd(cal.getTime());
-//      evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
-//      evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
-//      container.addItem(evt);
-//
-//      cal.setTime(evt.getStart());
-//      cal.add(Calendar.MINUTE, 10);
-//    }
-
     List<TimelineGroup> groups = new ArrayList<>(GROUPS.length);
     for (String groupId : GROUPS) {
       groups.add(new BasicTimelineGroup(groupId, groupId, null));
@@ -54,7 +35,7 @@ public class DefaultDemo extends VerticalLayout {
 
     Timeline t = new Timeline();
     t.getOptions().setOrientation(TimelineOptions.TimeAxisOrientation.TOP);
-    t.getOptions().setType(TimelineOptions.ItemType.RANGEOVERFLOW);
+    t.getOptions().setType(TimelineOptions.ItemType.POINT);
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
     t.addSelectionChangeListener(new SelectionChangeListener() {
@@ -62,7 +43,7 @@ public class DefaultDemo extends VerticalLayout {
       public void selectionChange(SelectionChangeEvent event) {
 //        CalendarEvent calEvent = event.getCalendarEvent();
 //        System.out.println("Event select: " + (calEvent == null ?
-//            "<no selection>" : calEvent.getCaption()));
+//            "<no selection>" : calEvent.getContent()));
         System.out.println("Selection changed.");
       }
     });
@@ -100,6 +81,7 @@ public class DefaultDemo extends VerticalLayout {
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
 
+    // Build items
     final TextField numItemsTxt = new TextField();
     numItemsTxt.setValue("100");
     controlLayout.addComponent(numItemsTxt);
@@ -130,6 +112,43 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    // Item type
+    ComboBox cmb = new ComboBox("Item Type");
+    cmb.setNullSelectionAllowed(false);
+    cmb.setImmediate(true);
+    cmb.setFilteringMode(FilteringMode.OFF);
+    for (TimelineOptions.ItemType itemType : TimelineOptions.ItemType.values()) {
+      cmb.addItem(itemType);
+    }
+    cmb.setValue(timeline.getOptions().getType());
+    cmb.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.getOptions().setType((TimelineOptions.ItemType) event.
+            getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(cmb);
+
+    // Item type
+    cmb = new ComboBox("Item Alignment");
+    cmb.setNullSelectionAllowed(false);
+    cmb.setImmediate(true);
+    cmb.setFilteringMode(FilteringMode.OFF);
+    for (TimelineOptions.ItemAlignment a : TimelineOptions.ItemAlignment.
+        values()) {
+      cmb.addItem(a);
+    }
+    cmb.setValue(timeline.getOptions().getAlign());
+    cmb.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        timeline.getOptions().setAlign((TimelineOptions.ItemAlignment) event.
+            getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(cmb);
+
     return controlLayout;
   }
 
@@ -140,12 +159,12 @@ public class DefaultDemo extends VerticalLayout {
 
     final DateField startDt = new DateField();
     startDt.setResolution(Resolution.SECOND);
-    startDt.setValue(timeline.getStartDate());
+    startDt.setValue(timeline.getWindowStart());
     controlLayout.addComponent(startDt);
 
     final DateField endDt = new DateField();
     endDt.setResolution(Resolution.SECOND);
-    endDt.setValue(timeline.getEndDate());
+    endDt.setValue(timeline.getWindowEnd());
     controlLayout.addComponent(endDt);
 
     Button btn = new Button("Set Window", new Button.ClickListener() {
@@ -198,12 +217,12 @@ public class DefaultDemo extends VerticalLayout {
     // Min/max
     final DateField minDt = new DateField();
     minDt.setResolution(Resolution.SECOND);
-    minDt.setValue(timeline.getStartDate());
+    minDt.setValue(timeline.getWindowStart());
     controlLayout.addComponent(minDt);
 
     final DateField maxDt = new DateField();
     maxDt.setResolution(Resolution.SECOND);
-    maxDt.setValue(timeline.getEndDate());
+    maxDt.setValue(timeline.getWindowEnd());
     controlLayout.addComponent(maxDt);
 
     btn = new Button("Apply Min/Max", new Button.ClickListener() {
