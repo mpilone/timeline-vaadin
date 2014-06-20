@@ -1,9 +1,9 @@
 # Timeline for Vaadin
 
-A Vaadin component for the [vis.js Timeline](http://visjs.org/)
-visualization component.
+A [Vaadin](https://vaadin.com/home) component for the 
+[vis.js Timeline](http://visjs.org/) visualization component.
 
-The timeline is easy to use and follows similar pattern's to Vaadin's
+The timeline is easy to use and follows similar patterns to Vaadin's
 Calendar component.
 
     // Create item groups (if using groups).
@@ -31,3 +31,8 @@ Calendar component.
   - Server side selection control
   - Client side rendering optimizations
 
+## History
+
+### v1.0
+
+  - First public release.
