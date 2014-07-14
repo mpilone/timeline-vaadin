@@ -30,9 +30,3 @@ Calendar component.
   - Events on item move, update, add, remove
   - Server side selection control
   - Client side rendering optimizations
-
-## History
-
-### v1.0
-
-  - First public release.
