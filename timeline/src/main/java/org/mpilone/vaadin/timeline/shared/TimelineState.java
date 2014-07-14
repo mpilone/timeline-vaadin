@@ -69,5 +69,6 @@ public class TimelineState extends JavaScriptComponentState {
     public String className;
     public String group;
     public String type;
+    public String title;
   }
 }

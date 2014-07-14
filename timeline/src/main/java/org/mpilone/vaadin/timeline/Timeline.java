@@ -299,6 +299,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
         i.group = item.getGroupId();
         i.type = item.getType() == null ? null : item.getType().name().
             toLowerCase();
+        i.title = item.getTitle();
 
         stateItems.add(i);
       }

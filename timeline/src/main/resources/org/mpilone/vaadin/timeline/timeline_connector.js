@@ -84,25 +84,15 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
     console_log("State change! Items: " + state.items.length);
 
-    // We have to copy the values into a new array because Timeline uses 
-    // instanceof to check for an array and it doesn't work for the GWT 
-    // created arrays. Stupid JavaScript and broken operations. This should 
-    // be fixed in the next version of Timeline (1.2?).
-    var items = [];
-    for (var i = 0; i < state.items.length; ++i) {
-      items.push(state.items[i]);
-    }
-
-    var groups = [];
-    for (var i = 0; i < state.groups.length; ++i) {
-      groups.push(state.groups[i]);
-    }
+    var items = state.items; 
+    var groups = state.groups;
+    var options = state.options;
 
     // We should probably be smarter about updating the groups and items 
     // already in the timeline rather than blindly replacing all the items.
+    timeline.setOptions(options);
     timeline.setGroups(groups);
     timeline.setItems(items);
-    timeline.setOptions(state.options);
   };
 
   // -----------------------

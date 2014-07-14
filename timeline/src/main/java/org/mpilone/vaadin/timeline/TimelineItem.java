@@ -65,4 +65,12 @@ public interface TimelineItem {
    * @return the CSS style name(s)
    */
   public String getStyleName();
+
+  /**
+   * Returns the title for the item, displayed when holding the mouse on the
+   * item. The title can only contain plain text.
+   *
+   * @return the title or null if not set
+   */
+  public String getTitle();
 }

@@ -35,7 +35,7 @@ public class DefaultDemo extends VerticalLayout {
 
     final Timeline t = new Timeline();
     t.getOptions().setOrientation(TimelineOptions.TimeAxisOrientation.TOP);
-    t.getOptions().setType(TimelineOptions.ItemType.RANGEOVERFLOW);
+    t.getOptions().setType(TimelineOptions.ItemType.RANGE);
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
     t.addSelectionChangeListener(new SelectionChangeListener() {
@@ -78,14 +78,10 @@ public class DefaultDemo extends VerticalLayout {
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
 
-    // We should be able to just set the type in the options and it would apply
-    // to all items but it seems like a bug in Timeline that a default type is
-    // used before the global type.
-    // See https://github.com/almende/vis/issues/172
     // Item type
     final ComboBox typeCmb = new ComboBox("Item Type");
     typeCmb.setNullSelectionAllowed(false);
-//    typeCmb.setImmediate(true);
+    typeCmb.setImmediate(true);
     typeCmb.setFilteringMode(FilteringMode.OFF);
     for (TimelineOptions.ItemType itemType : TimelineOptions.ItemType.values()) {
       typeCmb.addItem(itemType);
@@ -139,7 +135,7 @@ public class DefaultDemo extends VerticalLayout {
           evt.setEnd(cal.getTime());
           evt.setContent(PROGRAMS[(int) (Math.random() * 6)]);
           evt.setGroupId(GROUPS[(int) (Math.random() * 6)]);
-          evt.setType((TimelineOptions.ItemType) typeCmb.getValue());
+          evt.setTitle("Go to " + evt.getContent() + " details.");
           provider.addItem(evt);
 
           cal.setTime(evt.getStart());
