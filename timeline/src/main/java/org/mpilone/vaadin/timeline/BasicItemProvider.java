@@ -65,4 +65,25 @@ public class BasicItemProvider extends AbstractItemProvider implements
     fireEvent(new ItemSetChangeEvent(this));
   }
 
+  /**
+   * Removes all the items from the provider and fires the item set change
+   * event.
+   */
+  public void removeAllItems() {
+    items.clear();
+
+    fireEvent(new ItemSetChangeEvent(this));
+  }
+
+  /**
+   * Adds all the items to the provider and fires the item set change event.
+   *
+   * @param items the items to add
+   */
+  public void addAllItems(Collection<TimelineItem> items) {
+    items.addAll(items);
+
+    fireEvent(new ItemSetChangeEvent(this));
+  }
+
 }

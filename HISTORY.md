@@ -1,6 +1,10 @@
 # Timeline for Vaadin History
 
-## SNAPSHOT, v1.1.0
+## SNAPSHOT, v1.2.0
+
+- Added removeAllItems to the BasicItemProvider.
+
+## 2014-07-18, v1.1.0
 
 - Upgraded to vis.js 3.0. 
 - Added support for the new title field in a timeline item. 
