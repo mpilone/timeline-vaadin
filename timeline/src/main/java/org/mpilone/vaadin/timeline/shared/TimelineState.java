@@ -26,13 +26,20 @@ public class TimelineState extends JavaScriptComponentState {
   public static class Margin {
 
     public int axis;
-    public int item;
+    public MarginItem item;
+  }
+
+  public static class MarginItem {
+
+    public int vertical;
+    public int horizontal;
   }
 
   public static class Options {
 
     public String align;
     public boolean autoResize;
+    public boolean clickToUse;
     public Editable editable;
     public Long end;
     public String groupOrder;

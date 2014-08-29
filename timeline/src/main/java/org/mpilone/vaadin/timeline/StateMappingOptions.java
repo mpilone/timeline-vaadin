@@ -26,6 +26,7 @@ class StateMappingOptions implements TimelineOptions {
     TimelineState.Options o = new TimelineState.Options();
     o.align = TimelineOptions.ItemAlignment.CENTER.name().toLowerCase();
     o.autoResize = true;
+    o.clickToUse = false;
     o.editable = new TimelineState.Editable();
     o.editable.add = false;
     o.editable.remove = false;
@@ -35,7 +36,9 @@ class StateMappingOptions implements TimelineOptions {
     o.groupOrder = null;
     o.margin = new TimelineState.Margin();
     o.margin.axis = 20;
-    o.margin.item = 10;
+    o.margin.item = new TimelineState.MarginItem();
+    o.margin.item.horizontal = 10;
+    o.margin.item.vertical = 10;
     o.max = null;
     o.min = null;
     o.moveable = true;
@@ -74,6 +77,16 @@ class StateMappingOptions implements TimelineOptions {
    */
   private TimelineState getState(boolean markAsDirty) {
     return timeline.getState(markAsDirty);
+  }
+
+  @Override
+  public void setClickToUse(boolean enabled) {
+    getState().options.clickToUse = enabled;
+  }
+
+  @Override
+  public boolean isClickToUse() {
+    return getState(false).options.clickToUse;
   }
 
   @Override
@@ -183,14 +196,31 @@ class StateMappingOptions implements TimelineOptions {
     getState().options.margin.axis = marginAxis;
   }
 
-  @Override
-  public int getMarginItem() {
-    return getState(false).options.margin.item;
-  }
 
   @Override
   public void setMarginItem(int marginItem) {
-    getState().options.margin.item = marginItem;
+    getState().options.margin.item.vertical = marginItem;
+    getState().options.margin.item.horizontal = marginItem;
+  }
+
+  @Override
+  public void setMarginItemHorizontal(int marginItem) {
+    getState().options.margin.item.horizontal = marginItem;
+  }
+
+  @Override
+  public int getMarginItemHorizontal() {
+    return getState(false).options.margin.item.horizontal;
+  }
+
+  @Override
+  public void setMarginItemVertical(int marginItem) {
+    getState().options.margin.item.vertical = marginItem;
+  }
+
+  @Override
+  public int getMarginItemVertical() {
+    return getState(false).options.margin.item.vertical;
   }
 
   @Override

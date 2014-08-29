@@ -11,6 +11,14 @@ import com.vaadin.shared.communication.ClientRpc;
 public interface TimelineClientRpc extends ClientRpc {
 
   /**
+   * Sets the current time. This can be used for example to ensure that a
+   * client's time is synchronized with a shared server time.
+   *
+   * @param time the current time in milliseconds past the epoch
+   */
+  void setCurrentTime(long time);
+
+  /**
    * Sets the custom time to be displayed on the client.
    *
    * @param time the custom time in milliseconds past the epoch

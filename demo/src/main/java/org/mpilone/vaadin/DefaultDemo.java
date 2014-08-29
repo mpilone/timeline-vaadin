@@ -185,6 +185,19 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    final DateField currentTimeDt = new DateField();
+    currentTimeDt.setResolution(Resolution.SECOND);
+    currentTimeDt.setValue(new Date());
+    controlLayout.addComponent(currentTimeDt);
+
+    btn = new Button("Set Current Time", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        timeline.setCurrentTime(currentTimeDt.getValue());
+      }
+    });
+    controlLayout.addComponent(btn);
+
     return controlLayout;
   }
 
@@ -352,6 +365,17 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setZoomable((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Click to Use");
+    chk.setValue(timeline.getOptions().isClickToUse());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setClickToUse((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);

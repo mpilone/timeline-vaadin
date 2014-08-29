@@ -48,10 +48,17 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {type} time
    * @returns {undefined}
    */
+  this.setCurrentTime = function(time) {
+    timeline.setCurrentTime(new Date(time));
+  };
+  
+  /**
+   * 
+   * @param {type} time
+   * @returns {undefined}
+   */
   this.setCustomTime = function(time) {
     timeline.setCustomTime(new Date(time));
-
-//    rpcProxy.ackSetCurrentTime();
   };
 
   /**

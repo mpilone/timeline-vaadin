@@ -15,6 +15,7 @@
   </style>
 
   <script type="text/javascript" src="../../dist/vis.js"></script>
+  <link href="../../dist/vis.css" rel="stylesheet" type="text/css" />
 
   <script type="text/javascript">
     // Called on page load
@@ -45,9 +46,7 @@
         nodes: {
           shape: 'box'
         },
-        edges: {
-          length: 180
-        },
+        physics: {barnesHut:{springLength:150}}, // this is the correct way to set the length of the springs
         stabilize: false
       };
       var network = new vis.Network(container, data, options);

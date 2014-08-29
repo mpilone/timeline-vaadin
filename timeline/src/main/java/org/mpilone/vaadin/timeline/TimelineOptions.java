@@ -11,6 +11,25 @@ import java.util.Date;
  */
 public interface TimelineOptions {
 
+  /**
+   * When a Timeline is configured to be clickToUse, it will react to mouse and
+   * touch events only when active. When active, a blue shadow border is
+   * displayed around the Timeline. The Timeline is set active by clicking on
+   * it, and is changed to inactive again by clicking outside the Timeline or by
+   * pressing the ESC key.
+   *
+   * @return true if enabled
+   */
+  public boolean isClickToUse();
+
+  /**
+   * When a Timeline is configured to be clickToUse, it will react to mouse and
+   * touch events only when active.
+   *
+   * @param enabled true to enable, false to disable
+   */
+  public void setClickToUse(boolean enabled);
+
   public boolean isMoveable();
 
   public void setMoveable(boolean moveable);
@@ -58,10 +77,49 @@ public interface TimelineOptions {
   public int getMarginAxis();
 
   public void setMarginAxis(int marginAxis);
+//
+//  /**
+//   * The minimal margin in pixels between items in both horizontal and vertical direction.
+//   *
+//   * @return  the item margin
+//   */
+//  public int getMarginItem();
 
-  public int getMarginItem();
-
+  /**
+   * The minimal margin in pixels between items in both horizontal and vertical
+   * direction.
+   *
+   * @param marginItem the margin item
+   */
   public void setMarginItem(int marginItem);
+
+  /**
+   * The minimal horizontal margin in pixels between items.
+   *
+   * @return the horizontal margin in pixels
+   */
+  public int getMarginItemHorizontal();
+
+  /**
+   * Sets the minimal horizontal margin in pixels between items.
+   *
+   * @param marginItem the horizontal margin in pixels
+   */
+  public void setMarginItemHorizontal(int marginItem);
+
+  /**
+   * The minimal vertical margin in pixels between items.
+   *
+   * @return the vertical margin in pixels
+   */
+  public int getMarginItemVertical();
+
+  /**
+   * Sets the minimal vertical margin in pixels between items.
+   *
+   * @param marginItem the vertical margin in pixels
+   */
+  public void setMarginItemVertical(int marginItem);
 
   public Date getMax();
 

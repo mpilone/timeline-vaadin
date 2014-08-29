@@ -336,6 +336,17 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
+   * Adjust the current time of the time bar on the timeline. This can be used
+   * for example to ensure that a client's time is synchronized with a shared
+   * server time.
+   *
+   * @param time the current time to set
+   */
+  public void setCurrentTime(Date time) {
+    clientRpc.setCurrentTime(time.getTime());
+  }
+
+  /**
    * Sets a container as a data source for the items in the timeline. This is a
    * convenience method for doing
    * {@code Timeline.setItemProvider(new ContainerItemProvider(container))}. Use

@@ -3,6 +3,9 @@
 ## SNAPSHOT, v1.2.0
 
 - Added removeAllItems to the BasicItemProvider.
+- Upgraded to vis.js 3.3.
+- Exposed setCurrentTime method.
+- Exposed margin.item.vertical, margin.item.horizontal, clickToUse options.
 
 ## 2014-07-18, v1.1.0
 

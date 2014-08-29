@@ -2,6 +2,135 @@
 http://visjs.org
 
 
+## 2014-08-29, version 3.3.0
+
+### Timeline
+
+- Added localization support.
+- Implemented option `clickToUse`.
+- Implemented function `focus(id)` to center a specific item (or multiple items)
+  on screen.
+- Implemented an option `focus` for `setSelection(ids, options)`, to immediately
+  focus selected nodes.
+- Implemented function `moveTo(time, options)`.
+- Implemented animated range change for functions `fit`, `focus`, `setSelection`,
+  and `setWindow`.
+- Implemented functions `setCurrentTime(date)` and `getCurrentTime()`.
+- Implemented a new callback function `onMoving(item, callback)`.
+- Implemented support for option `align` for range items.
+- Fixed the `change` event sometimes being fired twice on IE10.
+- Fixed canceling moving an item to another group did not move the item
+  back to the original group.
+- Fixed the `change` event sometimes being fired twice on IE10.
+- Fixed canceling moving an item to another group did not move the item
+  back to the original group.
+
+### Network
+
+- A fix in reading group properties for a node.
+- Fixed physics solving stopping when a support node was not moving.
+- Implemented localization support.
+- Implemented option `clickToUse`.
+- Improved the `'stabilized'` event, it's now firing after every stabilization
+  with iteration count as parameter.
+- Fixed page scroll event not being blocked when moving around in Network
+  using arrow keys.
+- Fixed an initial rendering before the graph has been stabilized.
+- Fixed bug where loading hierarchical data after initialization crashed network.
+- Added different layout method to the hierarchical system based on the direction of the edges.
+
+### Graph2D
+
+- Implemented option `handleOverlap` to support overlap, sideBySide and stack.
+- Implemented two examples showing the `handleOverlap` functionality.
+- Implemented `customRange` for the Y axis and an example showing how it works.
+- Implemented localization support.
+- Implemented option `clickToUse`.
+- Implemented functions `setCurrentTime(date)` and `getCurrentTime()`.
+- Implemented function `moveTo(time, options)`.
+- Fixed bugs.
+- Added groups.visibility functionality and an example showing how it works.
+
+
+## 2014-08-14, version 3.2.0
+
+### General
+
+- Refactored Timeline and Graph2d to use the same core.
+
+### Graph2D
+
+- Added `visible` property to the groups.
+- Added `getLegend()` method.
+- Added `isGroupVisible()` method.
+- Fixed empty group bug.
+- Added `fit()` and `getItemRange()` methods.
+
+### Timeline
+
+- Fixed items in groups sometimes being displayed but not positioned correctly.
+- Fixed a group "null" being displayed in IE when not using groups.
+
+### Network
+
+- Fixed mass = 0 for nodes.
+- Revamped the options system. You can globally set options (network.setOptions) to update settings of nodes and edges that have not been specifically defined by the individual nodes and edges.
+- Disabled inheritColor when color information is set on an edge.
+- Tweaked examples.
+- Removed the global length property for edges. The edgelength is part of the physics system. Therefore, you have to change the springLength of the physics system to change the edge length. Individual edge lengths can still be defined.
+- Removed global edge length definition form examples.
+- Removed onclick and onrelease for navigation and switched to Hammer.js (fixing touchscreen interaction with navigation).
+- Fixed error on adding an edge without having created the nodes it should be connected to (in the case of dynamic smooth curves).
+
+
+## 2014-07-22, version 3.1.0
+
+### General
+
+- Refactored the code to commonjs modules, which are browserifyable. This allows
+  to create custom builds.
+
+### Timeline
+
+- Implemented function `getVisibleItems()`, which returns the items visible
+  in the current window.
+- Added options `margin.item.horizontal` and  `margin.item.vertical`, which
+  allows to specify different margins horizontally/vertically.
+- Removed check for number of arguments in callbacks `onAdd`, `onUpdate`, 
+  `onRemove`, and `onMove`.
+- Fixed items in groups sometimes being displayed but not positioned correctly.
+- Fixed range where the `end` of the first is equal to the `start` of the second 
+  sometimes being stacked instead of put besides each other when `item.margin=0`
+  due to round-off errors.
+
+### Network (formerly named Graph)
+
+- Expanded smoothCurves options for improved support for large clusters.
+- Added multiple types of smoothCurve drawing for greatly improved performance.
+- Option for inherited edge colors from connected nodes.
+- Option to disable the drawing of nodes or edges on drag.
+- Fixed support nodes not being cleaned up if edges are removed.
+- Improved edge selection detection for long smooth curves.
+- Fixed dot radius bug.
+- Updated max velocity of nodes to three times it's original value.
+- Made "stabilized" event fire every time the network stabilizes.
+- Fixed drift in dragging nodes while zooming.
+- Fixed recursively constructing of hierarchical layouts.
+- Added borderWidth option for nodes.
+- Implemented new Hierarchical view solver.
+- Fixed an issue with selecting nodes when the web page is scrolled down.
+- Added Gephi JSON parser
+- Added Neighbour Highlight example
+- Added Import From Gephi example
+- Enabled color parsing for nodes when supplied with rgb(xxx,xxx,xxx) value.
+
+### DataSet
+
+- Added .get() returnType option to return as JSON object, Array or Google 
+  DataTable.
+
+
+
 ## 2014-07-07, version 3.0.0
 
 ### Timeline
