@@ -6,6 +6,8 @@
 - Upgraded to vis.js 3.3.
 - Exposed setCurrentTime method.
 - Exposed margin.item.vertical, margin.item.horizontal, clickToUse options.
+- Added try/catch to handle an exception thrown when trying to destroy the 
+  timeline. See https://github.com/almende/vis/issues/294
 
 ## 2014-07-18, v1.1.0
 

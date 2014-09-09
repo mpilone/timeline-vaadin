@@ -78,7 +78,13 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @returns {undefined}
    */
   this.onUnregister = function() {
-    timeline.destroy();
+    try {
+      timeline.destroy();
+    }
+    catch (ex) {
+      // There appears to be a bug in timeline 3.3.0 that causes an exception 
+      // to be raised due to the onMoving method.
+    }
     timeline = null;
   };
 
