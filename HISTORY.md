@@ -8,6 +8,8 @@
 - Exposed margin.item.vertical, margin.item.horizontal, clickToUse options.
 - Added try/catch to handle an exception thrown when trying to destroy the 
   timeline. See https://github.com/almende/vis/issues/294
+- Added delete image and vis.map to the published "stylesheet" files so they 
+  are accessible on the client.
 
 ## 2014-07-18, v1.1.0
 
