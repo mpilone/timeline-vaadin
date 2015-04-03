@@ -1,14 +1,12 @@
 package org.mpilone.vaadin;
 
-import java.util.*;
-import java.util.Calendar;
-
-import org.mpilone.vaadin.timeline.*;
-
 import com.vaadin.data.Property;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
+import java.util.*;
+import java.util.Calendar;
+import org.mpilone.vaadin.timeline.*;
 
 /**
  *
@@ -376,6 +374,28 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setClickToUse((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Show Major Labels");
+    chk.setValue(timeline.getOptions().isClickToUse());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setShowMajorLabels((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Show Minor Labels");
+    chk.setValue(timeline.getOptions().isClickToUse());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setShowMinorLabels((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);

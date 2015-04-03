@@ -2,6 +2,10 @@
 
 ## SNAPSHOT, v1.2.0
 
+- Added support for "background" item type.
+- Added showMajorAxis and showMinorAxis toggles to the demo.
+- Upgraded to Vaadin 7.4.3.
+- Upgraded to vis.js 3.11.0.
 - Added removeAllItems to the BasicItemProvider.
 - Upgraded to vis.js 3.3.
 - Exposed setCurrentTime method.

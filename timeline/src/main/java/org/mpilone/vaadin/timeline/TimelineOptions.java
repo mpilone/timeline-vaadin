@@ -215,7 +215,8 @@ public interface TimelineOptions {
 
     BOX,
     POINT,
-    RANGE
+    RANGE,
+    BACKGROUND
   }
 
   /**

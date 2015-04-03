@@ -9,7 +9,7 @@
     }
     #mynetwork {
       position:relative;
-      width: 600px;
+      width: 800px;
       height: 600px;
       border: 1px solid lightgray;
     }
@@ -60,7 +60,15 @@
     var edges = null;
     var network = null;
 
+    function destroy() {
+      if (network !== null) {
+        network.destroy();
+        network = null;
+      }
+    }
+
     function draw() {
+      destroy();
       nodes = [];
       edges = [];
       var connectionCount = [];
