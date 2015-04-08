@@ -2,6 +2,7 @@
 
 ## SNAPSHOT, v1.2.0
 
+- Added support for setting format labels for major/minor labels.
 - Added support for "background" item type.
 - Added showMajorAxis and showMinorAxis toggles to the demo.
 - Upgraded to Vaadin 7.4.3.

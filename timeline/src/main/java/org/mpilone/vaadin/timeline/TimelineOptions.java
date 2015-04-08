@@ -1,6 +1,7 @@
 package org.mpilone.vaadin.timeline;
 
 import java.util.Date;
+import org.mpilone.vaadin.timeline.shared.TimelineState;
 
 /**
  * The various options that can be configured on the timeline. Refer to
@@ -69,6 +70,14 @@ public interface TimelineOptions {
   public Date getEnd();
 
   public void setEnd(Date end);
+
+  public void setFormatMajorLabels(TimelineState.FormatLabels formatLabels);
+
+  public TimelineState.FormatLabels getFormatMajorLabels();
+
+  public void setFormatMinorLabels(TimelineState.FormatLabels formatLabels);
+
+  public TimelineState.FormatLabels getFormatMinorLabels();
 
   public String getGroupOrder();
 
@@ -185,6 +194,14 @@ public interface TimelineOptions {
 
   public void setStart(Date start);
 
+  public void setTimeAxisScale(TimeAxisScale scale);
+
+  public TimeAxisScale getTimeAxisScale();
+
+  public void setTimeAxisStep(int step);
+
+  public int getTimeAxisStep();
+
   public ItemType getType();
 
   public void setType(ItemType type);
@@ -226,6 +243,11 @@ public interface TimelineOptions {
     LEFT,
     CENTER,
     RIGHT
+  }
+
+  public enum TimeAxisScale {
+
+    MILLISECOND, SECOND, MINUTE, HOUR, WEEKEND, DAY, MONTH, YEAR
   }
 
 }

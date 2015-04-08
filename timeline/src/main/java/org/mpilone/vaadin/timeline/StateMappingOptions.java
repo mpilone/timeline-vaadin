@@ -2,7 +2,6 @@
 package org.mpilone.vaadin.timeline;
 
 import java.util.Date;
-
 import org.mpilone.vaadin.timeline.shared.TimelineState;
 
 /**
@@ -33,6 +32,25 @@ class StateMappingOptions implements TimelineOptions {
     o.editable.updateGroup = false;
     o.editable.updateTime = false;
     o.end = null;
+    o.format = new TimelineState.Format();
+    o.format.minorLabels = new TimelineState.FormatLabels();
+    o.format.minorLabels.millisecond = "SSS";
+    o.format.minorLabels.second = "s";
+    o.format.minorLabels.minute = "HH:mm";
+    o.format.minorLabels.hour = "HH:mm";
+    o.format.minorLabels.weekday = "ddd D";
+    o.format.minorLabels.day = "D";
+    o.format.minorLabels.month = "MMM";
+    o.format.minorLabels.year = "YYYY";
+    o.format.majorLabels = new TimelineState.FormatLabels();
+    o.format.majorLabels.millisecond = "HH:mm:ss";
+    o.format.majorLabels.second = "D MMMM HH:mm";
+    o.format.majorLabels.minute = "ddd D MMMM";
+    o.format.majorLabels.hour = "ddd D MMMM";
+    o.format.majorLabels.weekday = "MMMM YYYY";
+    o.format.majorLabels.day = "MMMM YYYY";
+    o.format.majorLabels.month = "YYYY";
+    o.format.majorLabels.year = "";
     o.groupOrder = null;
     o.margin = new TimelineState.Margin();
     o.margin.axis = 20;
@@ -52,6 +70,9 @@ class StateMappingOptions implements TimelineOptions {
     o.showMinorLabels = true;
     o.stack = true;
     o.start = null;
+    o.timeAxis = new TimelineState.TimeAxis();
+    o.timeAxis.scale = TimeAxisScale.MINUTE.name().toLowerCase();
+    o.timeAxis.step = 30;
     o.type = TimelineOptions.ItemType.BOX.name().toLowerCase();
     o.zoomMax = Integer.MAX_VALUE;
     o.zoomMin = 10;
@@ -377,6 +398,46 @@ class StateMappingOptions implements TimelineOptions {
   @Override
   public void setZoomable(boolean zoomable) {
     getState().options.zoomable = zoomable;
+  }
+
+  @Override
+  public void setTimeAxisScale(TimeAxisScale scale) {
+    getState().options.timeAxis.scale = scale.name().toLowerCase();
+  }
+
+  @Override
+  public TimeAxisScale getTimeAxisScale() {
+    return TimeAxisScale.valueOf(getState(false).options.timeAxis.scale);
+  }
+
+  @Override
+  public void setTimeAxisStep(int step) {
+    getState().options.timeAxis.step = step;
+  }
+
+  @Override
+  public int getTimeAxisStep() {
+    return getState(false).options.timeAxis.step;
+  }
+
+  @Override
+  public void setFormatMajorLabels(TimelineState.FormatLabels formatLabels) {
+    getState().options.format.majorLabels = formatLabels;
+  }
+
+  @Override
+  public TimelineState.FormatLabels getFormatMajorLabels() {
+    return getState(false).options.format.majorLabels;
+  }
+
+  @Override
+  public void setFormatMinorLabels(TimelineState.FormatLabels formatLabels) {
+    getState().options.format.minorLabels = formatLabels;
+  }
+
+  @Override
+  public TimelineState.FormatLabels getFormatMinorLabels() {
+    return getState(false).options.format.minorLabels;
   }
 
 }
