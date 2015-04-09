@@ -1,6 +1,6 @@
 # Timeline for Vaadin History
 
-## SNAPSHOT, v1.2.0
+## 2015-04-09, v1.2.0
 
 - Added support for setting format labels for major/minor labels.
 - Added support for "background" item type.
