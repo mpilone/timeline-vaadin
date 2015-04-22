@@ -2,6 +2,7 @@
 package org.mpilone.vaadin.timeline;
 
 import java.util.Date;
+
 import org.mpilone.vaadin.timeline.shared.TimelineState;
 
 /**
@@ -71,8 +72,8 @@ class StateMappingOptions implements TimelineOptions {
     o.stack = true;
     o.start = null;
     o.timeAxis = new TimelineState.TimeAxis();
-    o.timeAxis.scale = TimeAxisScale.MINUTE.name().toLowerCase();
-    o.timeAxis.step = 30;
+    o.timeAxis.scale = null;
+    o.timeAxis.step = 1;
     o.type = TimelineOptions.ItemType.BOX.name().toLowerCase();
     o.zoomMax = Integer.MAX_VALUE;
     o.zoomMin = 10;
@@ -402,12 +403,14 @@ class StateMappingOptions implements TimelineOptions {
 
   @Override
   public void setTimeAxisScale(TimeAxisScale scale) {
-    getState().options.timeAxis.scale = scale.name().toLowerCase();
+    getState().options.timeAxis.scale = scale == null ? null : scale.name().
+        toLowerCase();
   }
 
   @Override
   public TimeAxisScale getTimeAxisScale() {
-    return TimeAxisScale.valueOf(getState(false).options.timeAxis.scale);
+    String scale = getState(false).options.timeAxis.scale;
+    return scale == null ? null : TimeAxisScale.valueOf(scale);
   }
 
   @Override

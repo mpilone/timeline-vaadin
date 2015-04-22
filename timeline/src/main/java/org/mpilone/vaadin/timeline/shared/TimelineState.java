@@ -1,8 +1,9 @@
 
 package org.mpilone.vaadin.timeline.shared;
 
-import com.vaadin.shared.ui.JavaScriptComponentState;
 import java.util.List;
+
+import com.vaadin.shared.ui.JavaScriptComponentState;
 
 /**
  * The timeline state.

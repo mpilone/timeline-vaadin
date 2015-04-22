@@ -2,6 +2,9 @@
 
 ## SNAPSHOT, v1.3.0
 
+## 2015-04-21, v1.2.1
+
+- Fixed a bug where the time axis scale was required when it should be an optional configuration parameter.
 
 ## 2015-04-09, v1.2.0
 
