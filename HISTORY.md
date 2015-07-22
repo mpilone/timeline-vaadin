@@ -1,6 +1,11 @@
 # Timeline for Vaadin History
 
-## SNAPSHOT, v1.3.0
+## 2015-07-22, v2.0.0
+
+- Removed the delay in sending the rangechanged event to the server. This may result in many more events server side but it improves performance after a simple user drag.
+- Updated to vis.js 4.6.0. This is an API breaking change and is not backward compatible. Refer to the vis.js documentation for API changes.
+- Changed the client side implementation to use vis.DataSet which may improve performance a little bit when redrawing the timeline with a lot of items.
+- Added support for multiple custom time lines.
 
 ## 2015-04-21, v1.2.1
 

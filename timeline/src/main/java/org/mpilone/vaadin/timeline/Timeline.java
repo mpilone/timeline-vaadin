@@ -327,13 +327,35 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
+   * Add new vertical bar representing a custom time that can be dragged by the
+   * user.
+   *
+   * @param time the current time to set
+   * @param id the id of the custom time bar to modify
+   */
+  public void addCustomTime(Date time, String id) {
+    clientRpc.addCustomTime(time.getTime(), id);
+  }
+
+  /**
+   * Remove vertical bars previously added to the timeline via addCustomTime
+   * method.
+   *
+   * @param id the id of the custom time bar to remove
+   */
+  public void removeCustomTime(String id) {
+    clientRpc.removeCustomTime(id);
+  }
+
+  /**
    * Adjust the custom time of the timeline. Adjust the custom time bar. Only
    * applicable when the option showCustomTime is true.
    *
    * @param time the current time to set
+   * @param id the id of the custom time bar to modify
    */
-  public void setCustomTime(Date time) {
-    clientRpc.setCustomTime(time.getTime());
+  public void setCustomTime(Date time, String id) {
+    clientRpc.setCustomTime(time.getTime(), id);
   }
 
   /**
@@ -453,16 +475,16 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     @Override
-    public void rangeChanged(long start, long end) {
+    public void rangeChanged(long start, long end, boolean byUser) {
       Date startDate = new Date(start);
       Date endDate = new Date(end);
 
-      if (!Objects.equals(Timeline.this.startDate, startDate) || !Objects.
-          equals(
-              Timeline.this.endDate, endDate)) {
+      if (byUser) {
         Timeline.this.startDate = startDate;
         Timeline.this.endDate = endDate;
 
+        // Mark the timeline as dirty so we fetch new items from the provider
+        // and send them back to the client.
         Timeline.this.markAsDirty();
 
         WindowRangeChangeListener.WindowRangeChangeEvent evt =

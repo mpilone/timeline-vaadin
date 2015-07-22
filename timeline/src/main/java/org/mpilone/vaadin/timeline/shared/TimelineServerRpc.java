@@ -25,8 +25,9 @@ public interface TimelineServerRpc extends ServerRpc {
    *
    * @param start the start time of the visible range
    * @param end the end time of the visible range
+   * @param byUser changed happened because of user drag/zoom
    */
-  void rangeChanged(long start, long end);
+  void rangeChanged(long start, long end, boolean byUser);
 
   /**
    * Called when the selected items changes on the client side.

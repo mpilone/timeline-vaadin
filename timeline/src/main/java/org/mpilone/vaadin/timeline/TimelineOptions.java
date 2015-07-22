@@ -1,6 +1,7 @@
 package org.mpilone.vaadin.timeline;
 
 import java.util.Date;
+
 import org.mpilone.vaadin.timeline.shared.TimelineState;
 
 /**
@@ -161,22 +162,6 @@ public interface TimelineOptions {
    * @return true if enabled
    */
   public boolean isShowCurrentTime();
-
-  /**
-   * Show a vertical bar displaying a custom time. This line can be dragged by
-   * the user. The custom time can be utilized to show a state in the past or in
-   * the future.
-   *
-   * @param visible true to enable the vertical time bar, false to disable
-   */
-  public void setShowCustomTime(boolean visible);
-
-  /**
-   * Returns true if the current time is being shown on the client side.
-   *
-   * @return true if enabled
-   */
-  public boolean isShowCustomTime();
 
   public boolean isShowMajorLabels();
 

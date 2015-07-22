@@ -1,12 +1,14 @@
 package org.mpilone.vaadin;
 
+import java.util.*;
+import java.util.Calendar;
+
+import org.mpilone.vaadin.timeline.*;
+
 import com.vaadin.data.Property;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
-import java.util.*;
-import java.util.Calendar;
-import org.mpilone.vaadin.timeline.*;
 
 /**
  *
@@ -196,6 +198,14 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    btn = new Button("Add Custom Time", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        timeline.addCustomTime(new Date(), UUID.randomUUID().toString());
+      }
+    });
+    controlLayout.addComponent(btn);
+
     return controlLayout;
   }
 
@@ -319,17 +329,6 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setShowCurrentTime((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
-
-    chk = new CheckBox("Show Custom Time");
-    chk.setValue(timeline.getOptions().isShowCustomTime());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        TimelineOptions options = timeline.getOptions();
-        options.setShowCustomTime((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);

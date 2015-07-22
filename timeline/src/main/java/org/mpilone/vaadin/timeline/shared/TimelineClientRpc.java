@@ -22,8 +22,26 @@ public interface TimelineClientRpc extends ClientRpc {
    * Sets the custom time to be displayed on the client.
    *
    * @param time the custom time in milliseconds past the epoch
+   * @param id the id of the time bar
    */
-  void setCustomTime(long time);
+  void setCustomTime(long time, String id);
+
+  /**
+   * Add a new vertical bar representing a custom time that can be dragged by
+   * the user.
+   *
+   * @param time the custom time in milliseconds past the epoch
+   * @param id the id of the time bar
+   */
+  void addCustomTime(long time, String id);
+
+  /**
+   * Remove vertical bars previously added to the timeline via addCustomTime
+   * method.
+   *
+   * @param id the id of the time bar
+   */
+  void removeCustomTime(String id);
 
   /**
    * Sets the visible range (zoom) to the specified range. Accepts two

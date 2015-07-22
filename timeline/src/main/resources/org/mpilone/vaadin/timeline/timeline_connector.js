@@ -25,14 +25,9 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @type links.Timeline
    */
   var timeline;
-
-  /**
-   * The ID of the timer currently running to inform the server side of 
-   * a range change.
-   * 
-   * @type Number
-   */
-  var rangeChangeTimerId = -1;
+  
+  var groupsDataSet = new vis.DataSet([], { "queue": true });
+  var itemsDataSet = new vis.DataSet([], { "queue": true } );
 
   /*
    * Simple method for logging to the JS console if one is available.
@@ -51,14 +46,32 @@ org_mpilone_vaadin_timeline_Timeline = function() {
   this.setCurrentTime = function(time) {
     timeline.setCurrentTime(new Date(time));
   };
+
+/**
+   * 
+   * @param {type} id
+   * @returns {undefined}
+   */
+  this.removeCustomTime = function(id) {
+    timeline.removeCustomTime(id);
+  };
+
+  /**
+   * 
+   * @param {type} time
+   * @returns {undefined}
+   */
+  this.addCustomTime = function(time, id) {
+    timeline.addCustomTime(new Date(time), id);
+  };
   
   /**
    * 
    * @param {type} time
    * @returns {undefined}
    */
-  this.setCustomTime = function(time) {
-    timeline.setCustomTime(new Date(time));
+  this.setCustomTime = function(time, id) {
+    timeline.setCustomTime(new Date(time), id);
   };
 
   /**
@@ -104,8 +117,34 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // We should probably be smarter about updating the groups and items 
     // already in the timeline rather than blindly replacing all the items.
     timeline.setOptions(options);
-    timeline.setGroups(groups);
-    timeline.setItems(items);
+    
+    // Remove the groups no longer in the set and update the remaining ones.
+    var newIds = [];
+    for (var i = 0; i < groups.length; i++) {
+      newIds.push(groups[i].id);
+    }
+    var oldIds = groupsDataSet.getIds();
+    for (var i = 0; i < oldIds; i++) {
+      if (newIds.indexOf(oldIds[i]) < 0) {
+        groupsDataSet.remove(oldIds[i]);
+      }
+    }
+    groupsDataSet.update(groups);
+    groupsDataSet.flush();
+    
+    // Remove the items no longer in the set and update the remaining ones.
+    newIds = [];
+    for (var i = 0; i < items.length; i++) {
+      newIds.push(items[i].id);
+    }
+    oldIds = itemsDataSet.getIds();
+    for (var i = 0; i < oldIds.length; i++) {
+      if (newIds.indexOf(oldIds[i]) < 0) {
+        itemsDataSet.remove(oldIds[i]);
+      }
+    }
+    itemsDataSet.update(items);
+    itemsDataSet.flush();
   };
 
   // -----------------------
@@ -114,22 +153,11 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
   console_log("Creating timeline.");
 
-  timeline = new vis.Timeline(element, [], {});
+  timeline = new vis.Timeline(element, itemsDataSet, groupsDataSet, {});
 
   timeline.on('rangechanged', function(evt) {
-    if (rangeChangeTimerId !== -1) {
-      window.clearTimeout(rangeChangeTimerId);
-    }
-    rangeChangeTimerId = -1;
-
-    // Delay the call to the server because we only care about the last 
-    // update, not all the changes in between. This is similar to the 
-    // @Delay annotation on the ServerRpc interface but that isn't supported 
-    // in a JavaScript component.
-    rangeChangeTimerId = window.setTimeout(function() {
-      rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime());
-      rangeChangeTimerId = -1;
-    }, 800);
+    console_log("Range changed. Notifying the server.");
+      rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime(), evt.byUser);
   });
 
   timeline.on('select', function(evt) {

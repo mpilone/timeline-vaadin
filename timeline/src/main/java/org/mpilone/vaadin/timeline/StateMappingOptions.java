@@ -66,7 +66,6 @@ class StateMappingOptions implements TimelineOptions {
     o.padding = 5;
     o.selectable = true;
     o.showCurrentTime = true;
-    o.showCustomTime = false;
     o.showMajorLabels = true;
     o.showMinorLabels = true;
     o.stack = true;
@@ -297,16 +296,6 @@ class StateMappingOptions implements TimelineOptions {
   @Override
   public boolean isShowCurrentTime() {
     return getState(false).options.showCurrentTime;
-  }
-
-  @Override
-  public void setShowCustomTime(boolean visible) {
-    getState().options.showCustomTime = visible;
-  }
-
-  @Override
-  public boolean isShowCustomTime() {
-    return getState(false).options.showCustomTime;
   }
 
   @Override

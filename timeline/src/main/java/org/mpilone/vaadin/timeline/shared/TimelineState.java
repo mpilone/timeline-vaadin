@@ -75,7 +75,6 @@ public class TimelineState extends JavaScriptComponentState {
     public String orientation;
     public int padding;
     public boolean selectable;
-    public boolean showCustomTime;
     public boolean showCurrentTime;
     public boolean showMajorLabels;
     public boolean showMinorLabels;
