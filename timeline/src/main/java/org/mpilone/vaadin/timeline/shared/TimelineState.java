@@ -1,9 +1,8 @@
 
 package org.mpilone.vaadin.timeline.shared;
 
-import java.util.List;
-
 import com.vaadin.shared.ui.JavaScriptComponentState;
+import java.util.List;
 
 /**
  * The timeline state.
@@ -14,6 +13,7 @@ public class TimelineState extends JavaScriptComponentState {
   public List<Item> items;
   public List<Group> groups;
   public Options options;
+  public boolean rightClickPreventDefault;
 
   public static class TimeAxis {
 

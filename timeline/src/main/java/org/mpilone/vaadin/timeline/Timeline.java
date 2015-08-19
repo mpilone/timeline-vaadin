@@ -1,13 +1,13 @@
 package org.mpilone.vaadin.timeline;
 
-import java.util.*;
-
-import org.mpilone.vaadin.timeline.shared.*;
-
 import com.vaadin.annotations.*;
 import com.vaadin.data.Container;
 import com.vaadin.server.KeyMapper;
 import com.vaadin.ui.AbstractJavaScriptComponent;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
+import java.util.*;
+import org.mpilone.vaadin.timeline.shared.*;
 
 /**
  * An implementation of the vis.js Timeline component (http://visjs.org/). The
@@ -514,6 +514,44 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
       else {
         selection = new HashSet<>(newSelection);
+      }
+    }
+
+    @Override
+    public void click(EventProperties eventProps) {
+      UI ui = getUI();
+
+      if (ui != null) {
+        Notification n = new Notification("On Click", eventProps.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2);
+        n.show(ui.getPage());
+      }
+    }
+
+    @Override
+    public void doubleClick(EventProperties eventProps) {
+      UI ui = getUI();
+
+      if (ui != null) {
+        Notification n = new Notification("On Double Click", eventProps
+            .toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2);
+        n.show(ui.getPage());
+      }
+    }
+
+    @Override
+    public void contextmenu(EventProperties eventProps) {
+      UI ui = getUI();
+
+      if (ui != null) {
+        Notification n = new Notification("Context Menu Click", eventProps
+            .toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2);
+        n.show(ui.getPage());
       }
     }
   }

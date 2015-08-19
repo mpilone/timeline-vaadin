@@ -1,5 +1,10 @@
 # Timeline for Vaadin History
 
+## 2015-08-xx, v2.1.0
+
+- Updated to vis.js 4.7.0.
+
+
 ## 2015-07-22, v2.0.0
 
 - Removed the delay in sending the rangechanged event to the server. This may result in many more events server side but it improves performance after a simple user drag.

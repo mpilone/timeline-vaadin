@@ -2,9 +2,8 @@
 package org.mpilone.vaadin.timeline.shared;
 
 
-import java.util.List;
-
 import com.vaadin.shared.communication.ServerRpc;
+import java.util.List;
 
 /**
  * The client to server RPC operations.
@@ -36,4 +35,25 @@ public interface TimelineServerRpc extends ServerRpc {
    * are selected
    */
   void select(List<String> clientKeys);
+
+  /**
+   * Called when the user clicks on the timeline.
+   *
+   * @param eventProps the event details
+   */
+  void click(EventProperties eventProps);
+
+  /**
+   * Called when the user double clicks on the timeline.
+   *
+   * @param eventProps the event details
+   */
+  void doubleClick(EventProperties eventProps);
+
+  /**
+   * Called when the user right clicks on the timeline.
+   *
+   * @param eventProps the event details
+   */
+  void contextmenu(EventProperties eventProps);
 }

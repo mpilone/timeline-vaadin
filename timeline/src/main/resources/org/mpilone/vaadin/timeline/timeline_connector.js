@@ -163,4 +163,32 @@ org_mpilone_vaadin_timeline_Timeline = function() {
   timeline.on('select', function(evt) {
     rpcProxy.select(evt.items);
   });
+  
+  timeline.on('click', function(props) {
+    // Clear the original event or we get a circular reference error
+    // during stringify.
+    props.event = null;
+    
+    rpcProxy.click(props);
+  });
+  
+  timeline.on('doubleClick', function(props) {
+    // Clear the original event or we get a circular reference error
+    // during stringify.
+    props.event = null;
+    
+    rpcProxy.doubleClick(props);
+  });
+  
+  timeline.on('contextmenu', function(props) {
+    // Need to make this a property based on if there is a 
+    // listener or something.
+    props.event.preventDefault();
+    
+    // Clear the original event or we get a circular reference error
+    // during stringify.
+    props.event = null;
+    
+    rpcProxy.contextmenu(props);
+  });
 };
