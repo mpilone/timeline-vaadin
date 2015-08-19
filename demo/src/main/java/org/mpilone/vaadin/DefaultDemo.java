@@ -38,17 +38,49 @@ public class DefaultDemo extends VerticalLayout {
     t.getOptions().setType(TimelineOptions.ItemType.RANGE);
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
-    t.addSelectionChangeListener(new SelectionChangeListener() {
+    t.addSelectListener(new SelectListener() {
       @Override
-      public void selectionChange(SelectionChangeEvent event) {
-        System.out.println("Selection changed: " + t.getSelection());
+      public void select(SelectEvent evt) {
+        Notification n = new Notification("Select", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(4000);
+        n.show(getUI().getPage());
       }
     });
-    t.addWindowRangeChangeListener(new WindowRangeChangeListener() {
+    t.addRangeChangedListener(new RangeChangedListener() {
       @Override
-      public void windowRangeChange(WindowRangeChangeEvent event) {
-        System.out.println("Window range change: " + event.getStartDate()
-            + " to " + event.getEndDate());
+      public void rangeChanged(RangeChangedEvent event) {
+        Notification n = new Notification("Range Changed", event.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(3500);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addClickListener(new ClickListener() {
+      @Override
+      public void click(ClickEvent evt) {
+        Notification n = new Notification("Click", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(3000);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addDoubleClickListener(new DoubleClickListener() {
+      @Override
+      public void doubleClick(DoubleClickEvent evt) {
+        Notification n = new Notification("Double Click", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2500);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addContextMenuListener(new ContextMenuListener() {
+      @Override
+      public void contextMenu(ContextMenuEvent evt) {
+        Notification n = new Notification("Context Menu", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2000);
+        n.show(getUI().getPage());
       }
     });
 

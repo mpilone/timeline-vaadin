@@ -12,30 +12,31 @@ import com.vaadin.util.ReflectTools;
  *
  * @author mpilone
  */
-public interface WindowRangeChangeListener {
+public interface RangeChangedListener {
 
   /**
-   * The event handling method on the {@link WindowRangeChangeListener}.
+   * The event handling method on the {@link RangeChangedListener}.
    */
-  static final Method WINDOW_RANGE_CHANGE_METHOD = ReflectTools.findMethod(
-      WindowRangeChangeListener.class,
-      "windowRangeChange",
-      WindowRangeChangeListener.WindowRangeChangeEvent.class);
+  static final Method METHOD = ReflectTools.findMethod(
+      RangeChangedListener.class,
+      "rangeChanged",
+      RangeChangedListener.RangeChangedEvent.class);
 
   /**
    * Called when the visible range changes on the timeline.
    *
    * @param event the event details
    */
-  void windowRangeChange(WindowRangeChangeEvent event);
+  void rangeChanged(RangeChangedEvent event);
 
   /**
-   * The event fired when an event is selected on the timeline.
+   * The event fired when the window has changed on the timeline.
    */
-  public static class WindowRangeChangeEvent extends EventObject {
+  public static class RangeChangedEvent extends EventObject {
 
     private final Date startDate;
     private final Date endDate;
+    private final boolean byUser;
 
     /**
      * Constructs the event.
@@ -43,12 +44,15 @@ public interface WindowRangeChangeListener {
      * @param source the timeline component that generated the event
      * @param startDate the start date of the visible time range
      * @param endDate the end date of the visible time range
+     * @param byUser change happened because of a user drag/zoom
      */
-    public WindowRangeChangeEvent(Timeline source, Date startDate, Date endDate) {
+    public RangeChangedEvent(Timeline source, Date startDate, Date endDate,
+        boolean byUser) {
       super(source);
 
       this.startDate = startDate;
       this.endDate = endDate;
+      this.byUser = byUser;
     }
 
     /**
@@ -69,9 +73,23 @@ public interface WindowRangeChangeListener {
       return endDate;
     }
 
+    public boolean isByUser() {
+      return byUser;
+    }
+
+    /**
+     * Returns the timeline source.
+     *
+     * @return the source component
+     */
+    public Timeline getTimeline() {
+      return (Timeline) getSource();
+    }
+
     @Override
-    public Timeline getSource() {
-      return (Timeline) super.getSource();
+    public String toString() {
+      return "RangeChangedEvent{" + "startDate=" + startDate + ", endDate="
+          + endDate + ", byUser=" + byUser + '}';
     }
   }
 

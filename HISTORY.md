@@ -3,7 +3,8 @@
 ## 2015-08-xx, v2.1.0
 
 - Updated to vis.js 4.7.0.
-
+- Added support for the click, doubleClick, and contextmenu events.
+- Renamed the windowRangeChange and selectionChange events to be consistent with the Timeline API.
 
 ## 2015-07-22, v2.0.0
 

@@ -169,6 +169,11 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // during stringify.
     props.event = null;
     
+    // Vaadin appears to want to map a long to a Date (rather than a JS 
+    // or moment.js Date).
+    props.time = props.time.valueOf();
+    props.snappedTime = props.snappedTime.valueOf();
+    
     rpcProxy.click(props);
   });
   
@@ -176,6 +181,11 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // Clear the original event or we get a circular reference error
     // during stringify.
     props.event = null;
+    
+    // Vaadin appears to want to map a long to a Date (rather than a JS 
+    // or moment.js Date).
+    props.time = props.time.valueOf();
+    props.snappedTime = props.snappedTime.valueOf();
     
     rpcProxy.doubleClick(props);
   });
@@ -188,6 +198,11 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     // Clear the original event or we get a circular reference error
     // during stringify.
     props.event = null;
+    
+    // Vaadin appears to want to map a long to a Date (rather than a JS 
+    // or moment.js Date).
+    props.time = props.time.valueOf();
+    props.snappedTime = props.snappedTime.valueOf();
     
     rpcProxy.contextmenu(props);
   });

@@ -10,14 +10,14 @@ import java.util.Date;
 public class EventProperties {
 
   /**
-   * group (Number or null): the id of the clicked group.
+   * group (String, Number, or null): the id of the clicked group.
    */
-  public Integer group;
+  public String group;
 
   /**
-   * item (Number or null): the id of the clicked item.
+   * item (String, Number, or null): the id of the clicked item.
    */
-  public Integer item;
+  public String item;
 
   /**
    * pageX (Number): absolute horizontal position of the click event.

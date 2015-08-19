@@ -1,13 +1,17 @@
 package org.mpilone.vaadin.timeline;
 
+import java.util.*;
+
+import org.mpilone.vaadin.timeline.ClickListener.ClickEvent;
+import org.mpilone.vaadin.timeline.ContextMenuListener.ContextMenuEvent;
+import org.mpilone.vaadin.timeline.DoubleClickListener.DoubleClickEvent;
+import org.mpilone.vaadin.timeline.shared.*;
+
 import com.vaadin.annotations.*;
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.data.Container;
 import com.vaadin.server.KeyMapper;
-import com.vaadin.ui.AbstractJavaScriptComponent;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.UI;
-import java.util.*;
-import org.mpilone.vaadin.timeline.shared.*;
+import com.vaadin.ui.*;
 
 /**
  * An implementation of the vis.js Timeline component (http://visjs.org/). The
@@ -85,6 +89,60 @@ public class Timeline extends AbstractJavaScriptComponent implements
     currentCalendar.add(java.util.Calendar.HOUR, 8);
     Date end = currentCalendar.getTime();
     setWindow(start, end);
+  }
+
+  /**
+   * Adds the listener to receive single left-click events on the timeline.
+   *
+   * @param listener the listener to add
+   */
+  public void addClickListener(ClickListener listener) {
+    addListener(ClickEvent.class, listener, ClickListener.METHOD);
+  }
+
+  /**
+   * Removes the listener to receive single left-click events on the timeline.
+   *
+   * @param listener the listener to remove
+   */
+  public void removeClickListener(ClickListener listener) {
+    removeListener(ClickEvent.class, listener, ClickListener.METHOD);
+  }
+
+  /**
+   * Adds the listener to receive double left-click events on the timeline.
+   *
+   * @param listener the listener to add
+   */
+  public void addDoubleClickListener(DoubleClickListener listener) {
+    addListener(DoubleClickEvent.class, listener, DoubleClickListener.METHOD);
+  }
+
+  /**
+   * Removes the listener to receive double left-click events on the timeline.
+   *
+   * @param listener the listener to remove
+   */
+  public void removeClickListener(DoubleClickListener listener) {
+    removeListener(DoubleClickEvent.class, listener, DoubleClickListener.METHOD);
+  }
+
+  /**
+   * Adds the listener to receive right-click events on the timeline.
+   *
+   * @param listener the listener to add
+   */
+  public void addContextMenuListener(ContextMenuListener listener) {
+    addListener(ContextMenuEvent.class, listener, ContextMenuListener.METHOD);
+  }
+
+  /**
+   * Removes the listener to receive right-click events on the timeline.
+   *
+   * @param listener the listener to remove
+   */
+  public void removeContextMenuListener(ContextMenuListener listener) {
+    removeListener(ContextMenuEvent.class, listener, ContextMenuListener.METHOD);
   }
 
   /**
@@ -182,8 +240,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Deselects all selected items. A
-   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
-   * are deselected.
+   * {@link SelectListener.SelectEvent} will be
+   * fired if items are deselected.
    */
   public void deselectAll() {
     // TODO
@@ -191,8 +249,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Selects the items with given IDs. A
-   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
-   * are selected. That is, if the items exist and are not selected).
+   * {@link SelectListener.SelectEvent} will be fired if items
+   * are selected. That is, if the items exist and are not selected.
    *
    * @param itemIds the IDs of the items to select
    */
@@ -202,8 +260,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Selects the items with given IDs. A
-   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
-   * are selected. That is, if the items exist and are not selected).
+   * {@link SelectListener.SelectEvent} will
+   * be fired if items   * are selected. That is, if the items exist and are not selected).
    *
    * @param itemId the ID of the items to select
    */
@@ -213,8 +271,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Deselects the items with given IDs. A
-   * {@link SelectionChangeListener.SelectionChangeEvent} will be fired if items
-   * are deselected. That is, if the items exist and were selected).
+   * {@link SelectListener.SelectEvent}
+   * will be fired if items   * are deselected. That is, if the items exist and were selected).
    *
    * @param itemId the ID of the items to deselect
    */
@@ -408,9 +466,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
   @Override
   public void removeItem(TimelineItem item) {
     if (getItemProvider() instanceof TimelineItemProvider.Editable) {
-      TimelineItemProvider.Editable provider =
+      TimelineItemProvider.Editable p =
           (TimelineItemProvider.Editable) getItemProvider();
-      provider.removeItem(item);
+      p.removeItem(item);
       markAsDirty();
     }
     else {
@@ -421,47 +479,47 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Adds the given listener for
-   * {@link SelectionChangeListener.SelectionChangeEvent} items.
+   * {@link SelectListener.SelectEvent} items.
    *
    * @param listener the listener to add
    */
-  public void addSelectionChangeListener(SelectionChangeListener listener) {
-    addListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
-        SelectionChangeListener.SELECTION_CHANGE_METHOD);
+  public void addSelectListener(SelectListener listener) {
+    addListener(SelectListener.SelectEvent.class, listener,
+        SelectListener.SELECTION_CHANGE_METHOD);
   }
 
   /**
    * Adds the given listener for
-   * {@link SelectionChangeListener.SelectionChangeEvent} items.
+   * {@link SelectListener.SelectEvent} items.
    *
    * @param listener the listener to add
    */
-  public void removeEventSelectListener(SelectionChangeListener listener) {
-    removeListener(SelectionChangeListener.SelectionChangeEvent.class, listener,
-        SelectionChangeListener.SELECTION_CHANGE_METHOD);
+  public void removeSelectListener(SelectListener listener) {
+    removeListener(SelectListener.SelectEvent.class, listener,
+        SelectListener.SELECTION_CHANGE_METHOD);
   }
 
   /**
    * Adds the given listener for
-   * {@link WindowRangeChangeListener.WindowRangeChangeEvent} items.
+   * {@link RangeChangedListener.RangeChangedEvent}s.
    *
    * @param listener the listener to add
    */
-  public void addWindowRangeChangeListener(WindowRangeChangeListener listener) {
-    addListener(WindowRangeChangeListener.WindowRangeChangeEvent.class, listener,
-        WindowRangeChangeListener.WINDOW_RANGE_CHANGE_METHOD);
+  public void addRangeChangedListener(RangeChangedListener listener) {
+    addListener(RangeChangedListener.RangeChangedEvent.class, listener,
+        RangeChangedListener.METHOD);
   }
 
   /**
    * Adds the given listener for
-   * {@link WindowRangeChangeListener.WindowRangeChangeEvent} items.
+   * {@link RangeChangedListener.RangeChangedEvent}s.
    *
    * @param listener the listener to add
    */
-  public void removeWindowChangeListenerListener(
-      WindowRangeChangeListener listener) {
-    removeListener(WindowRangeChangeListener.WindowRangeChangeEvent.class,
-        listener, WindowRangeChangeListener.WINDOW_RANGE_CHANGE_METHOD);
+  public void removeRangeChangedListener(
+      RangeChangedListener listener) {
+    removeListener(RangeChangedListener.RangeChangedEvent.class,
+        listener, RangeChangedListener.METHOD);
   }
 
   /**
@@ -486,73 +544,60 @@ public class Timeline extends AbstractJavaScriptComponent implements
         // Mark the timeline as dirty so we fetch new items from the provider
         // and send them back to the client.
         Timeline.this.markAsDirty();
-
-        WindowRangeChangeListener.WindowRangeChangeEvent evt =
-            new WindowRangeChangeListener.WindowRangeChangeEvent(Timeline.this,
-                startDate, endDate);
-        fireEvent(evt);
       }
+
+      RangeChangedListener.RangeChangedEvent evt =
+          new RangeChangedListener.RangeChangedEvent(Timeline.this,
+              startDate, endDate, byUser);
+      fireEvent(evt);
     }
 
     @Override
     public void select(List<String> clientKeys) {
 
-      Set<Object> newSelection = new HashSet<>();
+      Set<Object> itemIds = new HashSet<>();
 
       for (String clientKey : clientKeys) {
-        newSelection.add(itemIdMapper.get(clientKey));
+        itemIds.add(itemIdMapper.get(clientKey));
       }
 
-      if (!newSelection.equals(selection)) {
-        SelectionChangeListener.SelectionChangeEvent evt =
-            new SelectionChangeListener.SelectionChangeEvent(Timeline.this,
-                selection,
-                newSelection);
+      // Apply the new selection internally.
+      Set<Object> oldSelection = selection;
+      selection = new HashSet<>(itemIds);
 
-        selection = new HashSet<>(newSelection);
+      // Only fire the event if the selection actually changed. This is more
+      // consistent with Vaadin components.
+      if (!itemIds.equals(oldSelection)) {
+        SelectListener.SelectEvent evt =
+            new SelectListener.SelectEvent(Timeline.this, itemIds);
+
         fireEvent(evt);
-      }
-      else {
-        selection = new HashSet<>(newSelection);
       }
     }
 
     @Override
     public void click(EventProperties eventProps) {
-      UI ui = getUI();
+      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+          eventProps.item);
 
-      if (ui != null) {
-        Notification n = new Notification("On Click", eventProps.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(2);
-        n.show(ui.getPage());
-      }
+      fireEvent(new ClickEvent(Timeline.this, itemId, eventProps));
     }
 
     @Override
     public void doubleClick(EventProperties eventProps) {
-      UI ui = getUI();
+      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+          eventProps.item);
 
-      if (ui != null) {
-        Notification n = new Notification("On Double Click", eventProps
-            .toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(2);
-        n.show(ui.getPage());
-      }
+      fireEvent(new DoubleClickEvent(Timeline.this, itemId, eventProps));
     }
 
     @Override
     public void contextmenu(EventProperties eventProps) {
-      UI ui = getUI();
+      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+          eventProps.item);
 
-      if (ui != null) {
-        Notification n = new Notification("Context Menu Click", eventProps
-            .toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(2);
-        n.show(ui.getPage());
-      }
+      fireEvent(new ContextMenuEvent(Timeline.this, itemId, eventProps));
     }
   }
+
 }
