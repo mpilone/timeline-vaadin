@@ -143,10 +143,6 @@ public interface TimelineOptions {
 
   public void setOrientation(TimeAxisOrientation orientation);
 
-  public int getPadding();
-
-  public void setPadding(int padding);
-
   /**
    * If true, the timeline shows a red, vertical line displaying the current
    * time. This time can be synchronized with a server via the method
@@ -198,6 +194,10 @@ public interface TimelineOptions {
   public int getZoomMin();
 
   public void setZoomMin(int zoomMin);
+
+  public void setMultiselect(boolean multiselect);
+
+  public boolean isMultiselect();
 
   /**
    * The orientation (i.e. location) of the time axis on the timeline.

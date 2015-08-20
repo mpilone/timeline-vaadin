@@ -73,4 +73,12 @@ public interface TimelineItem {
    * @return the title or null if not set
    */
   public String getTitle();
+
+  /**
+   * Override the editable option of the timeline for a specific item.
+   *
+   * @return true if editable, false if not, null to not override the global
+   * editable flag
+   */
+  public Boolean getEditable();
 }

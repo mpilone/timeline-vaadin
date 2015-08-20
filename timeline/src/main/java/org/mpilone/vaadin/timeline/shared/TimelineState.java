@@ -1,8 +1,8 @@
-
 package org.mpilone.vaadin.timeline.shared;
 
-import com.vaadin.shared.ui.JavaScriptComponentState;
 import java.util.List;
+
+import com.vaadin.shared.ui.JavaScriptComponentState;
 
 /**
  * The timeline state.
@@ -10,10 +10,10 @@ import java.util.List;
  * @author mpilone
  */
 public class TimelineState extends JavaScriptComponentState {
+
   public List<Item> items;
   public List<Group> groups;
   public Options options;
-  public boolean rightClickPreventDefault;
 
   public static class TimeAxis {
 
@@ -31,7 +31,7 @@ public class TimelineState extends JavaScriptComponentState {
 
   public static class Format {
 
-    public  FormatLabels majorLabels;
+    public FormatLabels majorLabels;
     public FormatLabels minorLabels;
   }
 
@@ -72,8 +72,8 @@ public class TimelineState extends JavaScriptComponentState {
     public Long max;
     public Long min;
     public boolean moveable;
+    public boolean multiselect;
     public String orientation;
-    public int padding;
     public boolean selectable;
     public boolean showCurrentTime;
     public boolean showMajorLabels;
@@ -88,12 +88,14 @@ public class TimelineState extends JavaScriptComponentState {
   }
 
   public static class Group {
+
     public String id;
     public String content;
     public String className;
   }
 
   public static class Item {
+
     public String id;
     public long start;
     public long end;
@@ -102,5 +104,6 @@ public class TimelineState extends JavaScriptComponentState {
     public String group;
     public String type;
     public String title;
+    public Boolean editable;
   }
 }

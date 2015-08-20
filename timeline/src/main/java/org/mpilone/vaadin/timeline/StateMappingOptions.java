@@ -61,9 +61,9 @@ class StateMappingOptions implements TimelineOptions {
     o.max = null;
     o.min = null;
     o.moveable = true;
+    o.multiselect = false;
     o.orientation =
         TimelineOptions.TimeAxisOrientation.BOTTOM.name().toLowerCase();
-    o.padding = 5;
     o.selectable = true;
     o.showCurrentTime = true;
     o.showMajorLabels = true;
@@ -118,10 +118,16 @@ class StateMappingOptions implements TimelineOptions {
   @Override
   public void setSelectable(boolean selectable) {
     getState().options.selectable = selectable;
+  }
 
-    if (!selectable) {
-      timeline.deselectAll();
-    }
+  @Override
+  public void setMultiselect(boolean multiselect) {
+    getState().options.multiselect = true;
+  }
+
+  @Override
+  public boolean isMultiselect() {
+    return getState(false).options.multiselect;
   }
 
   @Override
@@ -276,16 +282,6 @@ class StateMappingOptions implements TimelineOptions {
   public void setOrientation(
       TimelineOptions.TimeAxisOrientation orientation) {
     getState().options.orientation = orientation.name().toLowerCase();
-  }
-
-  @Override
-  public int getPadding() {
-    return getState(false).options.padding;
-  }
-
-  @Override
-  public void setPadding(int padding) {
-    getState().options.padding = padding;
   }
 
   @Override

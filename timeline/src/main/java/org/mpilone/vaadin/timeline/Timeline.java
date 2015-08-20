@@ -39,6 +39,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
       .getInstance();
   private Date startDate;
   private Date endDate;
+  private boolean itemsDirty;
 
   /**
    * Constructs the timeline with no caption and an empty item provider.
@@ -67,7 +68,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Constructs the timeline. The timeline will default to showing an 8 hour
-   * period starting "now" unless {@link #setWindow(java.util.Date, java.util.Date)
+   * period starting "now" unless {@link #setWindow(java.util.Date, java.util.Date, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetWindow)
    * } is called.
    *
    * @param caption the caption of the component
@@ -88,7 +89,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
     Date start = currentCalendar.getTime();
     currentCalendar.add(java.util.Calendar.HOUR, 8);
     Date end = currentCalendar.getTime();
-    setWindow(start, end);
+    setWindow(start, end, null);
   }
 
   /**
@@ -147,7 +148,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Returns the start date of the visible window. The date may be different
-   * from the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date)
+   * from the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetWindow)
    * } if the data or options causes a different window to be visible.
    *
    * @return the window start date
@@ -158,7 +159,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
   /**
    * Returns the end date of the visible window. The date may be different from
-   * the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date)
+   * the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetWindow)
    * } if the data or options causes a different window to be visible.
    *
    * @return the window end date
@@ -195,6 +196,14 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
     }
 
+    markItemsAsDirty();
+  }
+
+  /**
+   * Marks the items as dirty which causes them to be sent to the client.
+   */
+  private void markItemsAsDirty() {
+    itemsDirty = true;
     markAsDirty();
   }
 
@@ -239,45 +248,64 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Deselects all selected items. A
-   * {@link SelectListener.SelectEvent} will be
-   * fired if items are deselected.
+   * Deselects all selected items. This is a simple convenience method for
+   * calling {@link #setSelection(java.util.Collection, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetSelection)
+   * } with an empty list. A {@link SelectListener.SelectEvent} will be fired if
+   * items are deselected.
+   *
+   * @param options the method options
    */
-  public void deselectAll() {
-    // TODO
+  public void deselectAll(TimelineMethodOptions.SetSelection options) {
+    setSelection(Collections.emptySet(), options);
   }
 
   /**
-   * Selects the items with given IDs. A
-   * {@link SelectListener.SelectEvent} will be fired if items
-   * are selected. That is, if the items exist and are not selected.
+   * Selects the items with given IDs. A {@link SelectListener.SelectEvent} will
+   * be fired if items are selected. That is, if the items exist and are not
+   * selected.
    *
-   * @param itemIds the IDs of the items to select
+   * @param itemIds the IDs of the items to setSelection
+   * @param options the method options
    */
-  public void select(Collection<Object> itemIds) {
-    // TODO
+  public void setSelection(Collection<Object> itemIds,
+      TimelineMethodOptions.SetSelection options) {
+    if (itemIds == null) {
+      itemIds = Collections.emptySet();
+    }
+
+    // Convert the item IDs into the timeline item keys.
+    String[] keys = new String[itemIds.size()];
+    int i = 0;
+    for (Object itemId : itemIds) {
+      keys[i++] = itemIdMapper.key(itemId);
+    }
+
+    TimelineClientRpc.MethodOptions.SetSelection rpcOptions =
+        new TimelineClientRpc.MethodOptions.SetSelection();
+    if (options != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+      rpcOptions.focus = options.isFocus();
+    }
+
+    clientRpc.setSelection(keys, rpcOptions);
   }
 
   /**
-   * Selects the items with given IDs. A
-   * {@link SelectListener.SelectEvent} will
-   * be fired if items   * are selected. That is, if the items exist and are not selected).
+   * Deselects the items with given IDs. This is a simple convenience method for
+   * calling {@link #setSelection(java.util.Collection, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetSelection)
+   * } with the items removed from the current selection. A
+   * {@link SelectListener.SelectEvent} will be fired if items are deselected.
+   * That is, if the items exist and were selected).
    *
-   * @param itemId the ID of the items to select
+   * @param itemIds the ID of the items to deselect
+   * @param options the method options
    */
-  public void select(Object... itemId) {
-    // TODO
-  }
+  public void deselect(Collection<Object> itemIds,
+      TimelineMethodOptions.SetSelection options) {
+    Set<Object> newSelection = new HashSet<>(getSelection());
+    newSelection.removeAll(itemIds);
 
-  /**
-   * Deselects the items with given IDs. A
-   * {@link SelectListener.SelectEvent}
-   * will be fired if items   * are deselected. That is, if the items exist and were selected).
-   *
-   * @param itemId the ID of the items to deselect
-   */
-  public void deselect(Object... itemId) {
-    // TODO
+    setSelection(newSelection, options);
   }
 
   /**
@@ -325,7 +353,10 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void beforeClientResponse(boolean initial) {
     super.beforeClientResponse(initial);
 
-    setupStateItems();
+    if (itemsDirty) {
+      setupStateItems();
+      itemsDirty = false;
+    }
   }
 
   @Override
@@ -333,7 +364,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
       TimelineItemProvider.ItemSetChangeEvent changeEvent) {
     // sanity check
     if (provider == changeEvent.getSource()) {
-      markAsDirty();
+      markItemsAsDirty();
     }
   }
 
@@ -359,6 +390,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
         i.type = item.getType() == null ? null : item.getType().name().
             toLowerCase();
         i.title = item.getTitle();
+        i.editable = item.getEditable();
 
         stateItems.add(i);
       }
@@ -373,15 +405,85 @@ public class Timeline extends AbstractJavaScriptComponent implements
    *
    * @param start the start date
    * @param end the end date
+   * @param options the options for the method
    */
-  public void setWindow(Date start, Date end) {
+  public void setWindow(Date start, Date end,
+      TimelineMethodOptions.SetWindow options) {
     if (!Objects.equals(this.startDate, start) || !Objects.
         equals(this.endDate, end)) {
       this.startDate = start;
       this.endDate = end;
 
-      clientRpc.setWindow(start.getTime(), end.getTime());
+      TimelineClientRpc.MethodOptions.SetWindow rpcOptions =
+          new TimelineClientRpc.MethodOptions.SetWindow();
+      if (options != null) {
+        rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+      }
+
+      clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
     }
+  }
+
+  /**
+   * Adjust the visible window such that it fits all items.
+   *
+   * @param options the options for the method
+   */
+  public void fit(TimelineMethodOptions.Fit options) {
+    TimelineClientRpc.MethodOptions.Fit rpcOptions =
+        new TimelineClientRpc.MethodOptions.Fit();
+    if (options != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+    }
+
+    clientRpc.fit(rpcOptions);
+  }
+
+  /**
+   * Move the window such that given time is centered on screen.
+   *
+   * @param time the time to move to
+   * @param options the options for the method
+   */
+  public void moveTo(Date time, TimelineMethodOptions.MoveTo options) {
+    TimelineClientRpc.MethodOptions.MoveTo rpcOptions =
+        new TimelineClientRpc.MethodOptions.MoveTo();
+
+    if (options != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+    }
+
+    clientRpc.moveTo(time.getTime(), rpcOptions);
+  }
+
+  /**
+   * Adjust the visible window such that the selected item (or multiple items)
+   * are centered on screen.
+   *
+   * @param itemIds the ids of the items to focus on
+   * @param options the options for the method
+   */
+  public void focus(Collection<Object> itemIds,
+      TimelineMethodOptions.Fit options) {
+
+    if (itemIds == null) {
+      itemIds = Collections.emptySet();
+    }
+
+    // Convert the item IDs into the timeline item keys.
+    String[] keys = new String[itemIds.size()];
+    int i = 0;
+    for (Object itemId : itemIds) {
+      keys[i++] = itemIdMapper.key(itemId);
+    }
+
+    TimelineClientRpc.MethodOptions.Focus rpcOptions =
+        new TimelineClientRpc.MethodOptions.Focus();
+    if (options != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+    }
+
+    clientRpc.focus(keys, rpcOptions);
   }
 
   /**
@@ -452,9 +554,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
   @Override
   public void addItem(TimelineItem item) {
     if (getItemProvider() instanceof TimelineItemProvider.Editable) {
-      TimelineItemProvider.Editable provider =
+      TimelineItemProvider.Editable p =
           (TimelineItemProvider.Editable) getItemProvider();
-      provider.addItem(item);
+      p.addItem(item);
       markAsDirty();
     }
     else {
@@ -478,8 +580,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Adds the given listener for
-   * {@link SelectListener.SelectEvent} items.
+   * Adds the given listener for {@link SelectListener.SelectEvent} items.
    *
    * @param listener the listener to add
    */
@@ -489,8 +590,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Adds the given listener for
-   * {@link SelectListener.SelectEvent} items.
+   * Adds the given listener for {@link SelectListener.SelectEvent} items.
    *
    * @param listener the listener to add
    */
@@ -543,7 +643,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
         // Mark the timeline as dirty so we fetch new items from the provider
         // and send them back to the client.
-        Timeline.this.markAsDirty();
+        Timeline.this.markItemsAsDirty();
       }
 
       RangeChangedListener.RangeChangedEvent evt =

@@ -50,8 +50,82 @@ public interface TimelineClientRpc extends ClientRpc {
    *
    * @param start the start time
    * @param end the end time
+   * @param options the options for the method
    */
-  void setWindow(long start, long end);
+  void setWindow(long start, long end, MethodOptions.SetWindow options);
 
+  /**
+   * Select one or multiple items by their id. The currently selected items will
+   * be unselected. To unselect all selected items, call `setSelection([])`.
+   *
+   * @param ids the ids of the items to select
+   * @param options the options for the method
+   */
+  void setSelection(Object[] ids, MethodOptions.SetSelection options);
 
+  /**
+   * Adjust the visible window such that it fits all items.
+   *
+   * @param options the options for the method
+   */
+  void fit(MethodOptions.Fit options);
+
+  /**
+   * Adjust the visible window such that the selected item (or multiple items)
+   * are centered on screen.
+   *
+   * @param ids the ids of the items to focus on
+   * @param options the options for the method
+   */
+  void focus(Object[] ids, MethodOptions.Focus options);
+
+  /**
+   * Move the window such that given time is centered on screen.
+   *
+   * @param time the time to center on
+   * @param options the options for the method
+   */
+  void moveTo(long time, MethodOptions.MoveTo options);
+
+//  void setItems(Item[] items);
+//
+//  void setGroups(Group[] groups);
+
+  /**
+   * Options that can be passed to specific methods on the timeline.
+   */
+  public static class MethodOptions {
+
+    public static class Fit {
+
+      public Animation animation;
+    }
+
+    public static class Focus {
+
+      public Animation animation;
+    }
+
+    public static class MoveTo {
+
+      public Animation animation;
+    }
+
+    public static class SetSelection {
+
+      public boolean focus;
+      public Animation animation;
+    }
+
+    public static class SetWindow {
+
+      public Animation animation;
+    }
+  }
+
+  public static class Animation {
+
+    public Integer duration;
+    public String easingFunction;
+  }
 }

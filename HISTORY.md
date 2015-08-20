@@ -5,6 +5,8 @@
 - Updated to vis.js 4.7.0.
 - Added support for the click, doubleClick, and contextmenu events.
 - Renamed the windowRangeChange and selectionChange events to be consistent with the Timeline API.
+- Added new editable property to the TimelineItem.
+- Added support for the multiselect configuration option.
 
 ## 2015-07-22, v2.0.0
 

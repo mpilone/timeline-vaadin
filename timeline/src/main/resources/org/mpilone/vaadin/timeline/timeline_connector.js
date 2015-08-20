@@ -79,10 +79,56 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * 
    * @param {Number} start the start time in millis
    * @param {Number} end the end time in millis
+   * @param {Object} the method options
    * @returns {undefined}
    */
-  this.setWindow = function(start, end) {
-    timeline.setWindow(new Date(start), new Date(end));
+  this.setWindow = function(start, end, options) {
+    timeline.setWindow(new Date(start), new Date(end), options);
+  };
+  
+  /**
+   * Move the window such that given time is centered on screen.
+   * 
+   * @param {Number} time the time to center on
+   * @param {Object} the method options
+   * @returns {undefined}
+   */
+  this.moveTo = function(time, options) {
+    timeline.moveTo(new Date(time), options);
+  };
+  
+  /**
+   * Adjust the visible window such that the selected item (or multiple 
+   * items) are centered on screen.
+   * 
+   * @param {Number} the ids to focus on
+   * @param {Object} the method options
+   * @returns {undefined}
+   */
+  this.focus = function(ids, options) {
+    timeline.focus(ids, options);
+  };
+  
+  /**
+   * Adjust the visible window such that it fits all items.
+   * 
+   * @param {Object} the method options
+   * @returns {undefined}
+   */
+  this.fit = function(options) {
+    timeline.fit(options);
+  };
+  
+  /**
+   * Select one or multiple items by their id. The currently selected 
+   * items will be unselected. 
+   * 
+   * @param {Number} the ids to focus on
+   * @param {Object} the method options
+   * @returns {undefined}
+   */
+  this.setSelection = function(ids, options) {
+    timeline.setSelection(ids, options);
   };
   
   /**

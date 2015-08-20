@@ -25,8 +25,19 @@ Calendar component.
     // Add it to the UI.
     layout.addComponent(t);
 
+## Demo
+
+The demo can be executed with the following commands:
+
+  - git clone repo_url
+  - cd timeline-vaadin
+  - mvn clean install
+  - mvn -pl :timeline-vaadin-demo jetty:run
+
+You can then view the demo by going to 
+```http://localhost:8090/timeline-vaadin-demo/app/```.
+
 ## Not Implemented Yet
 
   - Events on item move, update, add, remove
   - Server side selection control
-  - Client side rendering optimizations

@@ -24,7 +24,7 @@ public class DefaultDemo extends VerticalLayout {
         "NPR News"};
 
   public DefaultDemo() {
-    setSizeFull();
+    setWidth("100%");
     setMargin(true);
     setSpacing(true);
 
@@ -38,57 +38,13 @@ public class DefaultDemo extends VerticalLayout {
     t.getOptions().setType(TimelineOptions.ItemType.RANGE);
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
-    t.addSelectListener(new SelectListener() {
-      @Override
-      public void select(SelectEvent evt) {
-        Notification n = new Notification("Select", evt.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(4000);
-        n.show(getUI().getPage());
-      }
-    });
-    t.addRangeChangedListener(new RangeChangedListener() {
-      @Override
-      public void rangeChanged(RangeChangedEvent event) {
-        Notification n = new Notification("Range Changed", event.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(3500);
-        n.show(getUI().getPage());
-      }
-    });
-    t.addClickListener(new ClickListener() {
-      @Override
-      public void click(ClickEvent evt) {
-        Notification n = new Notification("Click", evt.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(3000);
-        n.show(getUI().getPage());
-      }
-    });
-    t.addDoubleClickListener(new DoubleClickListener() {
-      @Override
-      public void doubleClick(DoubleClickEvent evt) {
-        Notification n = new Notification("Double Click", evt.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(2500);
-        n.show(getUI().getPage());
-      }
-    });
-    t.addContextMenuListener(new ContextMenuListener() {
-      @Override
-      public void contextMenu(ContextMenuEvent evt) {
-        Notification n = new Notification("Context Menu", evt.toString(),
-            Notification.Type.TRAY_NOTIFICATION);
-        n.setDelayMsec(2000);
-        n.show(getUI().getPage());
-      }
-    });
-
-    // Control options
-    addComponent(buildControls(t));
 
     // Timeline
     addComponent(t);
+
+    // Control options
+    addListeners(t);
+    addComponent(buildControls(t));
   }
 
   private Component buildControls(final Timeline timeline) {
@@ -99,7 +55,6 @@ public class DefaultDemo extends VerticalLayout {
 
     controlLayout.addComponent(buildTimeControls(timeline));
     controlLayout.addComponent(buildToggleControls(timeline));
-    controlLayout.addComponent(buildEditControls(timeline));
     controlLayout.addComponent(buildZoomControls(timeline));
     controlLayout.addComponent(buildDataControls(timeline));
 
@@ -107,8 +62,12 @@ public class DefaultDemo extends VerticalLayout {
   }
 
   private Component buildDataControls(final Timeline timeline) {
+    Panel panel = new Panel("Data Controls");
+
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
+    controlLayout.setMargin(true);
+    panel.setContent(controlLayout);
 
     // Item type
     final ComboBox typeCmb = new ComboBox("Item Type");
@@ -179,13 +138,31 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
-    return controlLayout;
+    btn = new Button("Select Random", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        TimelineItemProvider provider = timeline.getItemProvider();
+        List<TimelineItem> items = provider.getItems(timeline.getWindowStart(),
+            timeline.getWindowEnd());
+
+        int index = (int) (Math.random() * items.size());
+        TimelineItem item = items.get(index);
+        timeline.setSelection(Arrays.asList(item.getId()),
+            new TimelineMethodOptions.SetSelection(true, new Animation()));
+      }
+    });
+    controlLayout.addComponent(btn);
+
+    return panel;
   }
 
   private Component buildTimeControls(final Timeline timeline) {
+    Panel panel = new Panel("Time Controls");
 
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
+    controlLayout.setMargin(true);
+    panel.setContent(controlLayout);
 
     final DateField startDt = new DateField();
     startDt.setResolution(Resolution.SECOND);
@@ -200,19 +177,21 @@ public class DefaultDemo extends VerticalLayout {
     Button btn = new Button("Set Window", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
-        timeline.setWindow(startDt.getValue(), endDt.getValue());
+        timeline.setWindow(startDt.getValue(), endDt.getValue(),
+            new TimelineMethodOptions.SetWindow(new Animation(1000,
+                    Animation.EasingFunction.easeInCubic)));
       }
     });
     controlLayout.addComponent(btn);
 
-    btn = new Button("Set Window to Now", new Button.ClickListener() {
+    btn = new Button("Set Window (now + 4)", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
         Calendar cal = Calendar.getInstance();
         Date start = cal.getTime();
-        cal.add(Calendar.HOUR, 3);
+        cal.add(Calendar.HOUR, 4);
         Date end = cal.getTime();
-        timeline.setWindow(start, end);
+        timeline.setWindow(start, end, null);
       }
     });
     controlLayout.addComponent(btn);
@@ -221,7 +200,7 @@ public class DefaultDemo extends VerticalLayout {
     currentTimeDt.setResolution(Resolution.SECOND);
     currentTimeDt.setValue(new Date());
     controlLayout.addComponent(currentTimeDt);
-
+    
     btn = new Button("Set Current Time", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
@@ -238,13 +217,40 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
-    return controlLayout;
+    final DateField moveToDt = new DateField();
+    moveToDt.setResolution(Resolution.SECOND);
+    moveToDt.setValue(new Date());
+    controlLayout.addComponent(moveToDt);
+
+    btn = new Button("Move To", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        timeline.moveTo(moveToDt.getValue(), new TimelineMethodOptions.MoveTo(
+            new Animation(1000, Animation.EasingFunction.easeInOutQuad)));
+      }
+    });
+    controlLayout.addComponent(btn);
+
+    btn = new Button("Fit", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        timeline.fit(new TimelineMethodOptions.Fit(new Animation(750,
+            Animation.EasingFunction.easeInOutQuint)));
+      }
+    });
+    controlLayout.addComponent(btn);
+
+    return panel;
   }
 
   private Component buildZoomControls(final Timeline timeline) {
 
+    Panel panel = new Panel("Bounds Controls");
+
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
+    controlLayout.setMargin(true);
+    panel.setContent(controlLayout);
 
     // ZoomMin, ZoomMax
     final TextField zoomMin = new TextField();
@@ -286,12 +292,23 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
-    return controlLayout;
+    return panel;
   }
 
-  private Component buildEditControls(final Timeline timeline) {
+  /**
+   * Builds the toggle controls.
+   *
+   * @param timeline the timeline to control
+   *
+   * @return the container component
+   */
+  private Component buildToggleControls(final Timeline timeline) {
+    Panel panel = new Panel("Toggle Controls");
+
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
+    controlLayout.setMargin(true);
+    panel.setContent(controlLayout);
 
     CheckBox chk = new CheckBox("Read-only");
     chk.setValue(timeline.isReadOnly());
@@ -347,24 +364,6 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(chk);
 
-    return controlLayout;
-  }
-
-  private Component buildToggleControls(final Timeline timeline) {
-    VerticalLayout controlLayout = new VerticalLayout();
-    controlLayout.setSpacing(true);
-
-    CheckBox chk = new CheckBox("Show Current Time");
-    chk.setValue(timeline.getOptions().isShowCurrentTime());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        TimelineOptions options = timeline.getOptions();
-        options.setShowCurrentTime((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
-
     chk = new CheckBox("Selectable");
     chk.setValue(timeline.getOptions().isSelectable());
     chk.addValueChangeListener(new Property.ValueChangeListener() {
@@ -372,6 +371,28 @@ public class DefaultDemo extends VerticalLayout {
       public void valueChange(Property.ValueChangeEvent event) {
         TimelineOptions options = timeline.getOptions();
         options.setSelectable((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Multiselect");
+    chk.setValue(timeline.getOptions().isMultiselect());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setMultiselect((Boolean) event.getProperty().getValue());
+      }
+    });
+    controlLayout.addComponent(chk);
+
+    chk = new CheckBox("Show Current Time");
+    chk.setValue(timeline.getOptions().isShowCurrentTime());
+    chk.addValueChangeListener(new Property.ValueChangeListener() {
+      @Override
+      public void valueChange(Property.ValueChangeEvent event) {
+        TimelineOptions options = timeline.getOptions();
+        options.setShowCurrentTime((Boolean) event.getProperty().getValue());
       }
     });
     controlLayout.addComponent(chk);
@@ -431,7 +452,60 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(chk);
 
-    return controlLayout;
+    return panel;
+  }
+
+  /**
+   * Adds a number of listeners to the timeline to display user interactions.
+   *
+   * @param t the timeline to add the listeners to
+   */
+  private void addListeners(Timeline t) {
+    t.addSelectListener(new SelectListener() {
+      @Override
+      public void select(SelectListener.SelectEvent evt) {
+        Notification n = new Notification("Select", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(4000);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addRangeChangedListener(new RangeChangedListener() {
+      @Override
+      public void rangeChanged(RangeChangedListener.RangeChangedEvent event) {
+        Notification n = new Notification("Range Changed", event.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(3500);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addClickListener(new ClickListener() {
+      @Override
+      public void click(ClickListener.ClickEvent evt) {
+        Notification n = new Notification("Click", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(3000);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addDoubleClickListener(new DoubleClickListener() {
+      @Override
+      public void doubleClick(DoubleClickListener.DoubleClickEvent evt) {
+        Notification n = new Notification("Double Click", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2500);
+        n.show(getUI().getPage());
+      }
+    });
+    t.addContextMenuListener(new ContextMenuListener() {
+      @Override
+      public void contextMenu(ContextMenuListener.ContextMenuEvent evt) {
+        Notification n = new Notification("Context Menu", evt.toString(),
+            Notification.Type.TRAY_NOTIFICATION);
+        n.setDelayMsec(2000);
+        n.show(getUI().getPage());
+      }
+    });
   }
 
 }
