@@ -1,5 +1,9 @@
 # Timeline for Vaadin History
 
+## 2015-xx-xx, v2.2.0
+
+
+
 ## 2015-08-21, v2.1.0
 
 - Updated to vis.js 4.7.0.
