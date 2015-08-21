@@ -35,9 +35,8 @@ The demo can be executed with the following commands:
   - mvn -pl :timeline-vaadin-demo jetty:run
 
 You can then view the demo by going to 
-```http://localhost:8090/timeline-vaadin-demo/app/```.
+`http://localhost:8090/timeline-vaadin-demo/app/`.
 
 ## Not Implemented Yet
 
   - Events on item move, update, add, remove
-  - Server side selection control

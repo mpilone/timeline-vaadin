@@ -69,10 +69,21 @@ public class TimelineMethodOptions {
 
     private final Animation animation;
 
+    /**
+     * Constructs the options.
+     *
+     * @param animation the animation options or null for no animation
+     */
     public Fit(Animation animation) {
       this.animation = animation;
     }
 
+    /**
+     * Returns the animation to use for the operation. If null, no animation
+     * will be used.
+     *
+     * @return the animation for the operation
+     */
     public Animation getAnimation() {
       return animation;
     }

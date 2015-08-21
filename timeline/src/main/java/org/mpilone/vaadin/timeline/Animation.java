@@ -1,6 +1,7 @@
 package org.mpilone.vaadin.timeline;
 
 /**
+ * Animation options for an operation that moves the timeline.
  *
  * @author mpilone
  */
@@ -9,6 +10,10 @@ public class Animation {
   private final Integer duration;
   private final EasingFunction easingFunction;
 
+  /**
+   * Creates a default animation with a duration of 500ms and a
+   * {@link EasingFunction#easeInOutQuad}.
+   */
   public Animation() {
     this(500, EasingFunction.easeInOutQuad);
   }
