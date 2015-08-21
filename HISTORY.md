@@ -1,12 +1,17 @@
 # Timeline for Vaadin History
 
-## 2015-08-xx, v2.1.0
+## 2015-08-21, v2.1.0
 
 - Updated to vis.js 4.7.0.
 - Added support for the click, doubleClick, and contextmenu events.
 - Renamed the windowRangeChange and selectionChange events to be consistent with the Timeline API.
 - Added new editable property to the TimelineItem.
 - Added support for the multiselect configuration option.
+- Added support for the fit, focus, and moveTo operations. Added method options support to setWindow.
+- Implemented server side selection.
+- More optimizations on item and group updates.
+- Reintroduced the delay in sending the rangechanged event to the server but only if zoomable is enabled. Simple user drag events should therefore be immediate but when zooming is enabled the delay is used to prevent a flood of server side events.
+- Switched to the Valo theme in the demo and updated the layout to make it a little more organized.
 
 ## 2015-07-22, v2.0.0
 
