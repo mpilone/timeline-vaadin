@@ -10,7 +10,7 @@ public class Animation {
   private final EasingFunction easingFunction;
 
   public Animation() {
-    this(null, null);
+    this(500, EasingFunction.easeInOutQuad);
   }
 
   public Animation(Integer duration, EasingFunction easingFunction) {

@@ -129,6 +129,42 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    */
   this.setSelection = function(ids, options) {
     timeline.setSelection(ids, options);
+    
+    // The timeline doesn't generate a selection event when explictly 
+    // setting the selection so we fake one.
+    rpcProxy.select(timeline.getSelection());
+  };
+  
+  this.setItems = function(items) {
+    // Remove the items no longer in the set and update the remaining ones.
+    var newIds = [];
+    for (var i = 0; i < items.length; i++) {
+      newIds.push(items[i].id);
+    }
+    oldIds = itemsDataSet.getIds();
+    for (var i = 0; i < oldIds.length; i++) {
+      if (newIds.indexOf(oldIds[i]) < 0) {
+        itemsDataSet.remove(oldIds[i]);
+      }
+    }
+    itemsDataSet.update(items);
+    itemsDataSet.flush();
+  };
+  
+  this.setGroups = function(groups) {
+    // Remove the groups no longer in the set and update the remaining ones.
+    var newIds = [];
+    for (var i = 0; i < groups.length; i++) {
+      newIds.push(groups[i].id);
+    }
+    var oldIds = groupsDataSet.getIds();
+    for (var i = 0; i < oldIds; i++) {
+      if (newIds.indexOf(oldIds[i]) < 0) {
+        groupsDataSet.remove(oldIds[i]);
+      }
+    }
+    groupsDataSet.update(groups);
+    groupsDataSet.flush();
   };
   
   /**
@@ -154,43 +190,12 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
     var state = this.getState();
 
-    console_log("State change! Items: " + state.items.length);
+    console_log("State change!");
 
-    var items = state.items; 
-    var groups = state.groups;
+//    var items = state.items; 
+//    var groups = state.groups;
     var options = state.options;
-
-    // We should probably be smarter about updating the groups and items 
-    // already in the timeline rather than blindly replacing all the items.
     timeline.setOptions(options);
-    
-    // Remove the groups no longer in the set and update the remaining ones.
-    var newIds = [];
-    for (var i = 0; i < groups.length; i++) {
-      newIds.push(groups[i].id);
-    }
-    var oldIds = groupsDataSet.getIds();
-    for (var i = 0; i < oldIds; i++) {
-      if (newIds.indexOf(oldIds[i]) < 0) {
-        groupsDataSet.remove(oldIds[i]);
-      }
-    }
-    groupsDataSet.update(groups);
-    groupsDataSet.flush();
-    
-    // Remove the items no longer in the set and update the remaining ones.
-    newIds = [];
-    for (var i = 0; i < items.length; i++) {
-      newIds.push(items[i].id);
-    }
-    oldIds = itemsDataSet.getIds();
-    for (var i = 0; i < oldIds.length; i++) {
-      if (newIds.indexOf(oldIds[i]) < 0) {
-        itemsDataSet.remove(oldIds[i]);
-      }
-    }
-    itemsDataSet.update(items);
-    itemsDataSet.flush();
   };
 
   // -----------------------

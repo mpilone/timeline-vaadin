@@ -1,7 +1,5 @@
 package org.mpilone.vaadin.timeline.shared;
 
-import java.util.List;
-
 import com.vaadin.shared.ui.JavaScriptComponentState;
 
 /**
@@ -11,8 +9,6 @@ import com.vaadin.shared.ui.JavaScriptComponentState;
  */
 public class TimelineState extends JavaScriptComponentState {
 
-  public List<Item> items;
-  public List<Group> groups;
   public Options options;
 
   public static class TimeAxis {
@@ -87,23 +83,4 @@ public class TimelineState extends JavaScriptComponentState {
     public int zoomMin;
   }
 
-  public static class Group {
-
-    public String id;
-    public String content;
-    public String className;
-  }
-
-  public static class Item {
-
-    public String id;
-    public long start;
-    public long end;
-    public String content;
-    public String className;
-    public String group;
-    public String type;
-    public String title;
-    public Boolean editable;
-  }
 }

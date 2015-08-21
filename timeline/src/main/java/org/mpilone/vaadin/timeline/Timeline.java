@@ -1,17 +1,14 @@
 package org.mpilone.vaadin.timeline;
 
+import com.vaadin.annotations.*;
+import com.vaadin.annotations.JavaScript;
+import com.vaadin.data.Container;
+import com.vaadin.ui.*;
 import java.util.*;
-
 import org.mpilone.vaadin.timeline.ClickListener.ClickEvent;
 import org.mpilone.vaadin.timeline.ContextMenuListener.ContextMenuEvent;
 import org.mpilone.vaadin.timeline.DoubleClickListener.DoubleClickEvent;
 import org.mpilone.vaadin.timeline.shared.*;
-
-import com.vaadin.annotations.*;
-import com.vaadin.annotations.JavaScript;
-import com.vaadin.data.Container;
-import com.vaadin.server.KeyMapper;
-import com.vaadin.ui.*;
 
 /**
  * An implementation of the vis.js Timeline component (http://visjs.org/). The
@@ -28,8 +25,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
     TimelineItemProvider.ItemSetChangeListener {
 
   private List<TimelineItem> items;
-  private HashSet<Object> selection;
-  private KeyMapper<Object> itemIdMapper;
+  private Set<Object> selection;
+  private DataProviderKeyMapper keyMapper;
   private List<TimelineGroup> groups;
   private TimelineOptions options;
   private TimelineItemProvider provider;
@@ -82,7 +79,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
     registerRpc(serverRpc);
     clientRpc = getRpcProxy(TimelineClientRpc.class);
 
-    itemIdMapper = new KeyMapper<>();
+    keyMapper = new DataProviderKeyMapper();
     selection = new HashSet<>();
     options = new StateMappingOptions(this);
 
@@ -214,19 +211,19 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * @param groups the groups to set or null to clear the groups
    */
   public void setGroups(List<TimelineGroup> groups) {
-    this.groups = groups;
+    this.groups = groups == null ? new ArrayList<TimelineGroup>() : groups;
 
-    List<TimelineState.Group> stateGroups = new ArrayList<>();
-    if (groups != null) {
-      for (TimelineGroup g : groups) {
-        TimelineState.Group group = new TimelineState.Group();
+    TimelineClientRpc.Group[] rpcGroups = new TimelineClientRpc.Group[groups
+        .size()];
+    int i = 0;
+    for (TimelineGroup g : groups) {
+      TimelineClientRpc.Group group = new TimelineClientRpc.Group();
         group.className = g.getStyleName() == null ? "" : g.getStyleName();
         group.content = g.getContent();
         group.id = g.getId();
-        stateGroups.add(group);
-      }
+      rpcGroups[i++] = group;
     }
-    getState().groups = stateGroups;
+    clientRpc.setGroups(rpcGroups);
   }
 
   /**
@@ -274,11 +271,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     // Convert the item IDs into the timeline item keys.
-    String[] keys = new String[itemIds.size()];
-    int i = 0;
-    for (Object itemId : itemIds) {
-      keys[i++] = itemIdMapper.key(itemId);
-    }
+    List<String> keyList = keyMapper.getKeys(itemIds);
+    String[] keys = new String[keyList.size()];
+    keyList.toArray(keys);
 
     TimelineClientRpc.MethodOptions.SetSelection rpcOptions =
         new TimelineClientRpc.MethodOptions.SetSelection();
@@ -373,29 +368,41 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   private void setupStateItems() {
     items = getItemProvider().getItems(startDate, endDate);
+    items = items == null ? new ArrayList<TimelineItem>() : items;
 
-    itemIdMapper.removeAll();
+    List<Object> itemIds = new ArrayList<>(items.size());
+    TimelineClientRpc.Item[] rpcItems = new TimelineClientRpc.Item[items.size()];
+    int j = 0;
+    for (TimelineItem item : items) {
 
-    List<TimelineState.Item> stateItems = new ArrayList<>();
-    if (items != null) {
-      for (TimelineItem item : items) {
-        TimelineState.Item i = new TimelineState.Item();
-        i.id = itemIdMapper.key(item.getId());
-        i.content = item.getContent() == null ? "" : item.getContent();
-        i.start = item.getStart().getTime();
-        i.end = item.getEnd().getTime();
-        i.className = item.getStyleName() == null ? "" : item
+      itemIds.add(item.getId());
+
+        TimelineClientRpc.Item rpcItem = new TimelineClientRpc.Item();
+      rpcItem.id = keyMapper.getKey(item.getId());
+        rpcItem.content = item.getContent() == null ? "" : item.getContent();
+        rpcItem.start = item.getStart().getTime();
+        rpcItem.end = item.getEnd().getTime();
+        rpcItem.className = item.getStyleName() == null ? "" : item
             .getStyleName();
-        i.group = item.getGroupId();
-        i.type = item.getType() == null ? null : item.getType().name().
+        rpcItem.group = item.getGroupId();
+        rpcItem.type = item.getType() == null ? null : item.getType().name().
             toLowerCase();
-        i.title = item.getTitle();
-        i.editable = item.getEditable();
+        rpcItem.title = item.getTitle();
+        rpcItem.editable = item.getEditable();
 
-        stateItems.add(i);
-      }
+      rpcItems[j++] = rpcItem;
     }
-    getState().items = stateItems;
+
+    // Cleanup any id mappings that are no longer active or pinned.
+    keyMapper.setActiveRows(itemIds);
+
+    // Set the items.
+    clientRpc.setItems(rpcItems);
+
+    // Reapply the selection in the event that a selected item move out of
+    // the window and back in again.
+    setSelection(selection, new TimelineMethodOptions.SetSelection(false,
+        null));
   }
 
   /**
@@ -409,8 +416,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void setWindow(Date start, Date end,
       TimelineMethodOptions.SetWindow options) {
-    if (!Objects.equals(this.startDate, start) || !Objects.
-        equals(this.endDate, end)) {
+   
       this.startDate = start;
       this.endDate = end;
 
@@ -421,7 +427,6 @@ public class Timeline extends AbstractJavaScriptComponent implements
       }
 
       clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
-    }
   }
 
   /**
@@ -471,11 +476,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     // Convert the item IDs into the timeline item keys.
-    String[] keys = new String[itemIds.size()];
-    int i = 0;
-    for (Object itemId : itemIds) {
-      keys[i++] = itemIdMapper.key(itemId);
-    }
+   List<String> keyList = keyMapper.getKeys(itemIds);
+    String[] keys = new String[keyList.size()];
+    keyList.toArray(keys);
 
     TimelineClientRpc.MethodOptions.Focus rpcOptions =
         new TimelineClientRpc.MethodOptions.Focus();
@@ -637,39 +640,50 @@ public class Timeline extends AbstractJavaScriptComponent implements
       Date startDate = new Date(start);
       Date endDate = new Date(end);
 
-      if (byUser) {
+      // Only mark the items dirty and fire the event if the range
+      // actually changed.
+      if (!Objects.equals(Timeline.this.startDate, startDate) || !Objects.
+          equals(Timeline.this.endDate, endDate)) {
         Timeline.this.startDate = startDate;
         Timeline.this.endDate = endDate;
 
         // Mark the timeline as dirty so we fetch new items from the provider
         // and send them back to the client.
         Timeline.this.markItemsAsDirty();
-      }
 
-      RangeChangedListener.RangeChangedEvent evt =
-          new RangeChangedListener.RangeChangedEvent(Timeline.this,
-              startDate, endDate, byUser);
-      fireEvent(evt);
+        RangeChangedListener.RangeChangedEvent evt
+            = new RangeChangedListener.RangeChangedEvent(Timeline.this,
+                startDate, endDate, byUser);
+        fireEvent(evt);
+      }
     }
 
     @Override
     public void select(List<String> clientKeys) {
 
-      Set<Object> itemIds = new HashSet<>();
+      // Convert the keys back into item IDs.
+      Set<Object> newSelection = new HashSet<>(keyMapper.getItemIds(
+          clientKeys));
 
-      for (String clientKey : clientKeys) {
-        itemIds.add(itemIdMapper.get(clientKey));
+      // Unpin items no longer selected and pin items newly selected.
+      for (Object itemId : newSelection) {
+        if (keyMapper.isPinned(itemId) && !selection.contains(itemId)) {
+          keyMapper.unpin(itemId);
+        } else if (!keyMapper.isPinned(itemId)) {
+          keyMapper.pin(itemId);
+        }
       }
 
       // Apply the new selection internally.
       Set<Object> oldSelection = selection;
-      selection = new HashSet<>(itemIds);
+      selection = newSelection;
 
       // Only fire the event if the selection actually changed. This is more
       // consistent with Vaadin components.
-      if (!itemIds.equals(oldSelection)) {
+      if (!selection.equals(oldSelection)) {
         SelectListener.SelectEvent evt =
-            new SelectListener.SelectEvent(Timeline.this, itemIds);
+ new SelectListener.SelectEvent(
+            Timeline.this, selection);
 
         fireEvent(evt);
       }
@@ -677,7 +691,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
     @Override
     public void click(EventProperties eventProps) {
-      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+      Object itemId = eventProps.item == null ? null : keyMapper.getItemId(
           eventProps.item);
 
       fireEvent(new ClickEvent(Timeline.this, itemId, eventProps));
@@ -685,7 +699,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
     @Override
     public void doubleClick(EventProperties eventProps) {
-      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+      Object itemId = eventProps.item == null ? null : keyMapper.getItemId(
           eventProps.item);
 
       fireEvent(new DoubleClickEvent(Timeline.this, itemId, eventProps));
@@ -693,7 +707,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
     @Override
     public void contextmenu(EventProperties eventProps) {
-      Object itemId = eventProps.item == null ? null : itemIdMapper.get(
+      Object itemId = eventProps.item == null ? null : keyMapper.getItemId(
           eventProps.item);
 
       fireEvent(new ContextMenuEvent(Timeline.this, itemId, eventProps));

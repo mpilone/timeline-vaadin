@@ -87,9 +87,19 @@ public interface TimelineClientRpc extends ClientRpc {
    */
   void moveTo(long time, MethodOptions.MoveTo options);
 
-//  void setItems(Item[] items);
-//
-//  void setGroups(Group[] groups);
+  /**
+   * Sets the items to be displayed in the timeline.
+   *
+   * @param items the items to display
+   */
+  void setItems(Item[] items);
+
+  /**
+   * Sets the groups to be displayed in the timeline.
+   *
+   * @param groups the groups to display
+   */
+  void setGroups(Group[] groups);
 
   /**
    * Options that can be passed to specific methods on the timeline.
@@ -127,5 +137,25 @@ public interface TimelineClientRpc extends ClientRpc {
 
     public Integer duration;
     public String easingFunction;
+  }
+
+  public static class Group {
+
+    public String id;
+    public String content;
+    public String className;
+  }
+
+  public static class Item {
+
+    public String id;
+    public long start;
+    public long end;
+    public String content;
+    public String className;
+    public String group;
+    public String type;
+    public String title;
+    public Boolean editable;
   }
 }

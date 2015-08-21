@@ -1,14 +1,12 @@
 package org.mpilone.vaadin;
 
-import java.util.*;
-import java.util.Calendar;
-
-import org.mpilone.vaadin.timeline.*;
-
 import com.vaadin.data.Property;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
+import java.util.*;
+import java.util.Calendar;
+import org.mpilone.vaadin.timeline.*;
 
 /**
  *
@@ -468,15 +466,19 @@ public class DefaultDemo extends VerticalLayout {
             Notification.Type.TRAY_NOTIFICATION);
         n.setDelayMsec(4000);
         n.show(getUI().getPage());
+
+        System.out.println("Select: " + evt.toString());
       }
     });
     t.addRangeChangedListener(new RangeChangedListener() {
       @Override
-      public void rangeChanged(RangeChangedListener.RangeChangedEvent event) {
-        Notification n = new Notification("Range Changed", event.toString(),
+      public void rangeChanged(RangeChangedListener.RangeChangedEvent evt) {
+        Notification n = new Notification("Range Changed", evt.toString(),
             Notification.Type.TRAY_NOTIFICATION);
         n.setDelayMsec(3500);
         n.show(getUI().getPage());
+
+        System.out.println("Range Changed: " + evt.toString());
       }
     });
     t.addClickListener(new ClickListener() {
