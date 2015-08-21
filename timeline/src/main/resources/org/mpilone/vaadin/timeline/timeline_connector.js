@@ -2,7 +2,7 @@
 /*
  * The entry point into the connector from the Vaadin framework.
  */
-org_mpilone_vaadin_timeline_Timeline = function() {
+org_mpilone_vaadin_timeline_Timeline = function () {
 
   /*
    *  The root HTML element that represents this component. 
@@ -25,9 +25,28 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @type links.Timeline
    */
   var timeline;
-  
-  var groupsDataSet = new vis.DataSet([], { "queue": true });
-  var itemsDataSet = new vis.DataSet([], { "queue": true } );
+
+  /**
+   * The ID of the timer currently running to inform the server side of 
+   * a range change.
+   * 
+   * @type Number
+   */
+  var rangeChangeTimerId = -1;
+
+  /**
+   * The data set containing the groups in the timeline.
+   * 
+   * @type vis.DataSet
+   */
+  var groupsDataSet = new vis.DataSet([], {"queue": true});
+
+  /**
+   * The data set containing the items in the timeline.
+   * 
+   * @type vis.DataSet
+   */
+  var itemsDataSet = new vis.DataSet([], {"queue": true});
 
   /*
    * Simple method for logging to the JS console if one is available.
@@ -43,16 +62,16 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {type} time
    * @returns {undefined}
    */
-  this.setCurrentTime = function(time) {
+  this.setCurrentTime = function (time) {
     timeline.setCurrentTime(new Date(time));
   };
 
-/**
+  /**
    * 
    * @param {type} id
    * @returns {undefined}
    */
-  this.removeCustomTime = function(id) {
+  this.removeCustomTime = function (id) {
     timeline.removeCustomTime(id);
   };
 
@@ -61,16 +80,16 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {type} time
    * @returns {undefined}
    */
-  this.addCustomTime = function(time, id) {
+  this.addCustomTime = function (time, id) {
     timeline.addCustomTime(new Date(time), id);
   };
-  
+
   /**
    * 
    * @param {type} time
    * @returns {undefined}
    */
-  this.setCustomTime = function(time, id) {
+  this.setCustomTime = function (time, id) {
     timeline.setCustomTime(new Date(time), id);
   };
 
@@ -82,10 +101,10 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {Object} the method options
    * @returns {undefined}
    */
-  this.setWindow = function(start, end, options) {
+  this.setWindow = function (start, end, options) {
     timeline.setWindow(new Date(start), new Date(end), options);
   };
-  
+
   /**
    * Move the window such that given time is centered on screen.
    * 
@@ -93,10 +112,10 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {Object} the method options
    * @returns {undefined}
    */
-  this.moveTo = function(time, options) {
+  this.moveTo = function (time, options) {
     timeline.moveTo(new Date(time), options);
   };
-  
+
   /**
    * Adjust the visible window such that the selected item (or multiple 
    * items) are centered on screen.
@@ -105,20 +124,20 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {Object} the method options
    * @returns {undefined}
    */
-  this.focus = function(ids, options) {
+  this.focus = function (ids, options) {
     timeline.focus(ids, options);
   };
-  
+
   /**
    * Adjust the visible window such that it fits all items.
    * 
    * @param {Object} the method options
    * @returns {undefined}
    */
-  this.fit = function(options) {
+  this.fit = function (options) {
     timeline.fit(options);
   };
-  
+
   /**
    * Select one or multiple items by their id. The currently selected 
    * items will be unselected. 
@@ -127,15 +146,15 @@ org_mpilone_vaadin_timeline_Timeline = function() {
    * @param {Object} the method options
    * @returns {undefined}
    */
-  this.setSelection = function(ids, options) {
+  this.setSelection = function (ids, options) {
     timeline.setSelection(ids, options);
-    
+
     // The timeline doesn't generate a selection event when explictly 
     // setting the selection so we fake one.
     rpcProxy.select(timeline.getSelection());
   };
-  
-  this.setItems = function(items) {
+
+  this.setItems = function (items) {
     // Remove the items no longer in the set and update the remaining ones.
     var newIds = [];
     for (var i = 0; i < items.length; i++) {
@@ -150,8 +169,8 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     itemsDataSet.update(items);
     itemsDataSet.flush();
   };
-  
-  this.setGroups = function(groups) {
+
+  this.setGroups = function (groups) {
     // Remove the groups no longer in the set and update the remaining ones.
     var newIds = [];
     for (var i = 0; i < groups.length; i++) {
@@ -166,27 +185,32 @@ org_mpilone_vaadin_timeline_Timeline = function() {
     groupsDataSet.update(groups);
     groupsDataSet.flush();
   };
-  
+
   /**
    * Called when the component is removed from the UI.
    * 
    * @returns {undefined}
    */
-  this.onUnregister = function() {
+  this.onUnregister = function () {
     try {
+      if (rangeChangeTimerId !== -1) {
+        window.clearTimeout(rangeChangeTimerId);
+      }
+
       timeline.destroy();
     }
     catch (ex) {
       // There appears to be a bug in timeline 3.3.0 that causes an exception 
       // to be raised due to the onMoving method.
     }
+    rangeChangeTimerId = -1;
     timeline = null;
   };
 
   /*
    * Called when the state on the server side changes.
    */
-  this.onStateChange = function() {
+  this.onStateChange = function () {
 
     var state = this.getState();
 
@@ -206,55 +230,74 @@ org_mpilone_vaadin_timeline_Timeline = function() {
 
   timeline = new vis.Timeline(element, itemsDataSet, groupsDataSet, {});
 
-  timeline.on('rangechanged', function(evt) {
-    console_log("Range changed. Notifying the server.");
+  var that = this;
+  timeline.on('rangechanged', function (evt) {
+    if (rangeChangeTimerId !== -1) {
+      window.clearTimeout(rangeChangeTimerId);
+    }
+    rangeChangeTimerId = -1;
+
+    if (that.getState().options.zoomable) {
+      // Delay the call to the server because we only care about the last 
+      // update, not all the changes in between. This is similar to the 
+      // @Delay annotation on the ServerRpc interface but that isn't supported 
+      // in a JavaScript component.
+      rangeChangeTimerId = window.setTimeout(function () {
+        console_log("Range changed. Notifying the server.");
+        rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime(), evt.byUser);
+        rangeChangeTimerId = -1;
+      }, 250);
+    }
+    else {
+      console_log("Range changed. Notifying the server.");
       rpcProxy.rangeChanged(evt.start.getTime(), evt.end.getTime(), evt.byUser);
+    }
   });
 
-  timeline.on('select', function(evt) {
+  timeline.on('select', function (evt) {
     rpcProxy.select(evt.items);
   });
-  
-  timeline.on('click', function(props) {
+
+  timeline.on('click', function (props) {
     // Clear the original event or we get a circular reference error
     // during stringify.
     props.event = null;
-    
+
     // Vaadin appears to want to map a long to a Date (rather than a JS 
     // or moment.js Date).
     props.time = props.time.valueOf();
     props.snappedTime = props.snappedTime.valueOf();
-    
+
     rpcProxy.click(props);
   });
-  
-  timeline.on('doubleClick', function(props) {
+
+  timeline.on('doubleClick', function (props) {
     // Clear the original event or we get a circular reference error
     // during stringify.
     props.event = null;
-    
+
     // Vaadin appears to want to map a long to a Date (rather than a JS 
     // or moment.js Date).
     props.time = props.time.valueOf();
     props.snappedTime = props.snappedTime.valueOf();
-    
+
     rpcProxy.doubleClick(props);
   });
-  
-  timeline.on('contextmenu', function(props) {
+
+  timeline.on('contextmenu', function (props) {
     // Need to make this a property based on if there is a 
     // listener or something.
     props.event.preventDefault();
-    
+
     // Clear the original event or we get a circular reference error
     // during stringify.
     props.event = null;
-    
+
     // Vaadin appears to want to map a long to a Date (rather than a JS 
     // or moment.js Date).
     props.time = props.time.valueOf();
     props.snappedTime = props.snappedTime.valueOf();
-    
+
     rpcProxy.contextmenu(props);
   });
 };
