@@ -213,17 +213,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void setGroups(List<TimelineGroup> groups) {
     this.groups = groups == null ? new ArrayList<TimelineGroup>() : groups;
 
-    TimelineClientRpc.Group[] rpcGroups = new TimelineClientRpc.Group[groups
-        .size()];
-    int i = 0;
-    for (TimelineGroup g : groups) {
-      TimelineClientRpc.Group group = new TimelineClientRpc.Group();
-        group.className = g.getStyleName() == null ? "" : g.getStyleName();
-        group.content = g.getContent();
-        group.id = g.getId();
-      rpcGroups[i++] = group;
-    }
-    clientRpc.setGroups(rpcGroups);
+    sendGroupsToClient();
   }
 
   /**
@@ -348,10 +338,15 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void beforeClientResponse(boolean initial) {
     super.beforeClientResponse(initial);
 
-    if (itemsDirty) {
-      setupStateItems();
-      itemsDirty = false;
+    if (initial) {
+      sendItemsToClient();
+      sendGroupsToClient();
+      setWindow(startDate, endDate, null);
+    } else if (itemsDirty) {
+      sendItemsToClient();
     }
+
+    itemsDirty = false;
   }
 
   @Override
@@ -364,9 +359,28 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Sets up the items to be returned to the client in the timeline state.
+   * Sets up the groups to be sent to the client and makes the RPC call to send
+   * them.
    */
-  private void setupStateItems() {
+  private void sendGroupsToClient() {
+    TimelineClientRpc.Group[] rpcGroups = new TimelineClientRpc.Group[groups
+        .size()];
+    int i = 0;
+    for (TimelineGroup g : groups) {
+      TimelineClientRpc.Group group = new TimelineClientRpc.Group();
+      group.className = g.getStyleName() == null ? "" : g.getStyleName();
+      group.content = g.getContent();
+      group.id = g.getId();
+      rpcGroups[i++] = group;
+    }
+    clientRpc.setGroups(rpcGroups);
+  }
+
+  /**
+   * Sets up the items to be sent to the client and makes the RPC call to send
+   * them.
+   */
+  private void sendItemsToClient() {
     items = getItemProvider().getItems(startDate, endDate);
     items = items == null ? new ArrayList<TimelineItem>() : items;
 

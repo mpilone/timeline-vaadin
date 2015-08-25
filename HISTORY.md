@@ -1,8 +1,8 @@
 # Timeline for Vaadin History
 
-## 2015-xx-xx, v2.2.0
+## 2015-08-24, v2.1.1
 
-
+- Fixed a bug where toggling the visibility of the timeline caused the groups and items to disappear.
 
 ## 2015-08-21, v2.1.0
 

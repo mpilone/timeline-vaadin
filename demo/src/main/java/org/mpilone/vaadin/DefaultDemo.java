@@ -151,6 +151,14 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    btn = new Button("Toggle Visible", new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        timeline.setVisible(!timeline.isVisible());
+      }
+    });
+    controlLayout.addComponent(btn);
+
     return panel;
   }
 
