@@ -1,6 +1,6 @@
 # Timeline for Vaadin History
 
-## 2015-10-09, v2.2.0
+## 2015-10-09, v2.1.2
 
 - Modified the margin options to support null margin value.
 - Fixed a bug where replacing the groups would only add groups and never remove the existing ones.

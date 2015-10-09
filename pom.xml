@@ -4,7 +4,7 @@
     <groupId>org.mpilone</groupId>
     <artifactId>timeline-vaadin-parent</artifactId>
     <name>Timeline for Vaadin Parent</name>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.1.2</version>
     <packaging>pom</packaging>
 
     <modules>
