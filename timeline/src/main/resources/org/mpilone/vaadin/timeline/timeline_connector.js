@@ -177,7 +177,7 @@ org_mpilone_vaadin_timeline_Timeline = function () {
       newIds.push(groups[i].id);
     }
     var oldIds = groupsDataSet.getIds();
-    for (var i = 0; i < oldIds; i++) {
+    for (var i = 0; i < oldIds.length; i++) {
       if (newIds.indexOf(oldIds[i]) < 0) {
         groupsDataSet.remove(oldIds[i]);
       }

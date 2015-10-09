@@ -84,52 +84,15 @@ public interface TimelineOptions {
 
   public void setGroupOrder(String groupOrder);
 
-  public int getMarginAxis();
-
-  public void setMarginAxis(int marginAxis);
-//
-//  /**
-//   * The minimal margin in pixels between items in both horizontal and vertical direction.
-//   *
-//   * @return  the item margin
-//   */
-//  public int getMarginItem();
+  public TimelineState.Margin getMargin();
 
   /**
-   * The minimal margin in pixels between items in both horizontal and vertical
-   * direction.
+   * Applies the same margin to the axis, item-horizontal, and item-vertical.
    *
-   * @param marginItem the margin item
+   * @param margin the margin value
    */
-  public void setMarginItem(int marginItem);
-
-  /**
-   * The minimal horizontal margin in pixels between items.
-   *
-   * @return the horizontal margin in pixels
-   */
-  public int getMarginItemHorizontal();
-
-  /**
-   * Sets the minimal horizontal margin in pixels between items.
-   *
-   * @param marginItem the horizontal margin in pixels
-   */
-  public void setMarginItemHorizontal(int marginItem);
-
-  /**
-   * The minimal vertical margin in pixels between items.
-   *
-   * @return the vertical margin in pixels
-   */
-  public int getMarginItemVertical();
-
-  /**
-   * Sets the minimal vertical margin in pixels between items.
-   *
-   * @param marginItem the vertical margin in pixels
-   */
-  public void setMarginItemVertical(int marginItem);
+  public void setMargin(int margin);
+  public void setMargin(TimelineState.Margin margin);
 
   public Date getMax();
 

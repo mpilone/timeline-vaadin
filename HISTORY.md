@@ -1,5 +1,10 @@
 # Timeline for Vaadin History
 
+## 2015-10-09, v2.2.0
+
+- Modified the margin options to support null margin value.
+- Fixed a bug where replacing the groups would only add groups and never remove the existing ones.
+
 ## 2015-08-24, v2.1.1
 
 - Fixed a bug where toggling the visibility of the timeline caused the groups and items to disappear.

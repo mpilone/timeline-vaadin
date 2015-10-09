@@ -1,12 +1,14 @@
 package org.mpilone.vaadin;
 
+import java.util.*;
+import java.util.Calendar;
+
+import org.mpilone.vaadin.timeline.*;
+
 import com.vaadin.data.Property;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.*;
-import java.util.*;
-import java.util.Calendar;
-import org.mpilone.vaadin.timeline.*;
 
 /**
  *

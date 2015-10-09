@@ -1,14 +1,16 @@
 package org.mpilone.vaadin.timeline;
 
-import com.vaadin.annotations.*;
-import com.vaadin.annotations.JavaScript;
-import com.vaadin.data.Container;
-import com.vaadin.ui.*;
 import java.util.*;
+
 import org.mpilone.vaadin.timeline.ClickListener.ClickEvent;
 import org.mpilone.vaadin.timeline.ContextMenuListener.ContextMenuEvent;
 import org.mpilone.vaadin.timeline.DoubleClickListener.DoubleClickEvent;
 import org.mpilone.vaadin.timeline.shared.*;
+
+import com.vaadin.annotations.*;
+import com.vaadin.annotations.JavaScript;
+import com.vaadin.data.Container;
+import com.vaadin.ui.*;
 
 /**
  * An implementation of the vis.js Timeline component (http://visjs.org/). The

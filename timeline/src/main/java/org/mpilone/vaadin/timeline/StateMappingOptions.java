@@ -214,40 +214,25 @@ class StateMappingOptions implements TimelineOptions {
   }
 
   @Override
-  public int getMarginAxis() {
-    return getState(false).options.margin.axis;
+  public TimelineState.Margin getMargin() {
+    return getState(false).options.margin;
   }
 
   @Override
-  public void setMarginAxis(int marginAxis) {
-    getState().options.margin.axis = marginAxis;
+  public void setMargin(int margin) {
+    TimelineState.Margin m = new TimelineState.Margin();
+    m.axis = margin;
+    m.item = new TimelineState.MarginItem();
+    m.item.horizontal = margin;
+    m.item.vertical = margin;
+
+    getState().options.margin = m;
   }
 
 
   @Override
-  public void setMarginItem(int marginItem) {
-    getState().options.margin.item.vertical = marginItem;
-    getState().options.margin.item.horizontal = marginItem;
-  }
-
-  @Override
-  public void setMarginItemHorizontal(int marginItem) {
-    getState().options.margin.item.horizontal = marginItem;
-  }
-
-  @Override
-  public int getMarginItemHorizontal() {
-    return getState(false).options.margin.item.horizontal;
-  }
-
-  @Override
-  public void setMarginItemVertical(int marginItem) {
-    getState().options.margin.item.vertical = marginItem;
-  }
-
-  @Override
-  public int getMarginItemVertical() {
-    return getState(false).options.margin.item.vertical;
+  public void setMargin(TimelineState.Margin margin) {
+    getState().options.margin = margin;
   }
 
   @Override
