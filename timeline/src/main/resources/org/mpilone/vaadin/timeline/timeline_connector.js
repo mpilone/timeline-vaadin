@@ -166,7 +166,17 @@ org_mpilone_vaadin_timeline_Timeline = function () {
         itemsDataSet.remove(oldIds[i]);
       }
     }
-    itemsDataSet.update(items);
+    
+    // We loop through the items and clone them because Timeline uses 
+    // 'instanceof' which fails for GWT created objects. My best guess 
+    // is that GWT is creating the objects in a different frame or context 
+    // so instanceof doesn't work.
+    // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
+    // See https://github.com/almende/vis/issues/1528
+    for (var i = 0; i < items.length; i++) {
+      itemsDataSet.update(this.shallowClone(items[i]));
+    }
+    
     itemsDataSet.flush();
   };
 
@@ -182,7 +192,13 @@ org_mpilone_vaadin_timeline_Timeline = function () {
         groupsDataSet.remove(oldIds[i]);
       }
     }
-    groupsDataSet.update(groups);
+    
+    // We loop through the items and clone them because Timeline uses 
+    // 'instanceof' which fails for GWT created objects. See the same loop in
+    // setItems for more details.
+    for (var i = 0; i < groups.length; i++) {
+      groupsDataSet.update(this.shallowClone(groups[i]));
+    }
     groupsDataSet.flush();
   };
 
@@ -220,6 +236,20 @@ org_mpilone_vaadin_timeline_Timeline = function () {
 //    var groups = state.groups;
     var options = state.options;
     timeline.setOptions(options);
+  };
+
+/**
+ * Performs a shallow clone on an object and returns the new object.
+ * 
+ * @param {Object} obj the object to clone
+ * @returns {Object} the new clone
+ */
+  this.shallowClone = function(obj) {
+    var copy = {};
+    for (var attr in obj) {
+        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+    }
+    return copy;  
   };
 
   // -----------------------

@@ -1,5 +1,12 @@
 # Timeline for Vaadin History
 
+## 2016-01-XX, v2.2.0
+
+- Updated to vis.js 4.12.0.
+- Fixed a NPE if groups were not set before the initial send to the client.
+- Removed the getWindowStart/getWindowEnd methods and added getWindow to be consistent with the Timeline API. (API breaking change)
+- Changed the behavior to only set the window state on the Timeline after the range change event is received from the client. This ensures a range change event whenever setWindow is called and the window range is modified even on the initial setup of the timeline.
+
 ## 2015-10-09, v2.1.2
 
 - Modified the margin options to support null margin value.

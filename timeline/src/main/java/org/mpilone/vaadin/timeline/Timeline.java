@@ -13,9 +13,18 @@ import com.vaadin.data.Container;
 import com.vaadin.ui.*;
 
 /**
+ * <p>
  * An implementation of the vis.js Timeline component (http://visjs.org/). The
  * timeline displays {@link TimelineItem}s provided by a
  * {@link TimelineItemProvider} on a scrollable and zoomable interface.
+ * </p>
+ * <p>
+ * Note that unlike other components, the internal state of the timeline, such
+ * as selected items and the window range, is only updated via events from the
+ * client. This is required because the client implementation has the complex
+ * logic to calculate the window range taking into account the configuration
+ * options like zoom and min/max as well as the items.
+ * </p>
  *
  * @author mpilone
  */
@@ -36,9 +45,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
   private final TimelineClientRpc clientRpc;
   protected java.util.Calendar currentCalendar = java.util.Calendar
       .getInstance();
-  private Date startDate;
-  private Date endDate;
+  private DateRange window;
   private boolean itemsDirty;
+  private boolean windowSet;
 
   /**
    * Constructs the timeline with no caption and an empty item provider.
@@ -84,11 +93,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
     keyMapper = new DataProviderKeyMapper();
     selection = new HashSet<>();
     options = new StateMappingOptions(this);
-
-    Date start = currentCalendar.getTime();
-    currentCalendar.add(java.util.Calendar.HOUR, 8);
-    Date end = currentCalendar.getTime();
-    setWindow(start, end, null);
+    groups = new ArrayList<>();
+    window = new DateRange(new Date(0), new Date(0));
   }
 
   /**
@@ -146,25 +152,17 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
-   * Returns the start date of the visible window. The date may be different
+   * Returns the date range of the visible window. The date may be different
    * from the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetWindow)
-   * } if the data or options causes a different window to be visible.
+   * } because the range is based on what is actually visible to the user based
+   * on calculations performed on the client side. It is possible that the
+   * window range is null if the timeline has never been displayed on the client
+   * side.
    *
-   * @return the window start date
+   * @return the window date range or null
    */
-  public Date getWindowStart() {
-    return startDate;
-  }
-
-  /**
-   * Returns the end date of the visible window. The date may be different from
-   * the date set with the last call to {@link #setWindow(java.util.Date, java.util.Date, org.mpilone.vaadin.timeline.TimelineMethodOptions.SetWindow)
-   * } if the data or options causes a different window to be visible.
-   *
-   * @return the window end date
-   */
-  public Date getWindowEnd() {
-    return endDate;
+  public DateRange getWindow() {
+    return window;
   }
 
   /**
@@ -341,10 +339,21 @@ public class Timeline extends AbstractJavaScriptComponent implements
     super.beforeClientResponse(initial);
 
     if (initial) {
-      sendItemsToClient();
+      // Use a default 8 hour window if the user didn't set one yet.
+      if (!windowSet) {
+        Date start = currentCalendar.getTime();
+        currentCalendar.add(java.util.Calendar.HOUR, 8);
+        Date end = currentCalendar.getTime();
+        setWindow(start, end, null);
+      }
+
       sendGroupsToClient();
-      setWindow(startDate, endDate, null);
-    } else if (itemsDirty) {
+
+      // Wait for the initial range change before sending items because
+      // the actual window may be modified on the client based on
+      // zoom, min/max, etc.
+    }
+    else if (itemsDirty) {
       sendItemsToClient();
     }
 
@@ -383,7 +392,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * them.
    */
   private void sendItemsToClient() {
-    items = getItemProvider().getItems(startDate, endDate);
+    items = getItemProvider().getItems(window.getStart(), window.getEnd());
     items = items == null ? new ArrayList<TimelineItem>() : items;
 
     List<Object> itemIds = new ArrayList<>(items.size());
@@ -393,18 +402,18 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
       itemIds.add(item.getId());
 
-        TimelineClientRpc.Item rpcItem = new TimelineClientRpc.Item();
+      TimelineClientRpc.Item rpcItem = new TimelineClientRpc.Item();
       rpcItem.id = keyMapper.getKey(item.getId());
-        rpcItem.content = item.getContent() == null ? "" : item.getContent();
-        rpcItem.start = item.getStart().getTime();
-        rpcItem.end = item.getEnd().getTime();
-        rpcItem.className = item.getStyleName() == null ? "" : item
-            .getStyleName();
-        rpcItem.group = item.getGroupId();
-        rpcItem.type = item.getType() == null ? null : item.getType().name().
-            toLowerCase();
-        rpcItem.title = item.getTitle();
-        rpcItem.editable = item.getEditable();
+      rpcItem.content = item.getContent() == null ? "" : item.getContent();
+      rpcItem.start = item.getStart().getTime();
+      rpcItem.end = item.getEnd().getTime();
+      rpcItem.className = item.getStyleName() == null ? "" : item
+          .getStyleName();
+      rpcItem.group = item.getGroupId();
+      rpcItem.type = item.getType() == null ? null : item.getType().name().
+          toLowerCase();
+      rpcItem.title = item.getTitle();
+      rpcItem.editable = item.getEditable();
 
       rpcItems[j++] = rpcItem;
     }
@@ -422,9 +431,16 @@ public class Timeline extends AbstractJavaScriptComponent implements
   }
 
   /**
+   * <p>
    * Sets the visible range (zoom) to the specified range. Accepts two
    * parameters of type Date that represent the first and last times of the
    * wanted selected visible range.
+   * </p>
+   * <p>
+   * Note that the window range is sent to the client and the internal state of
+   * the timeline is not modified until the client generates a range change
+   * event.
+   * </p>
    *
    * @param start the start date
    * @param end the end date
@@ -432,17 +448,22 @@ public class Timeline extends AbstractJavaScriptComponent implements
    */
   public void setWindow(Date start, Date end,
       TimelineMethodOptions.SetWindow options) {
-   
-      this.startDate = start;
-      this.endDate = end;
 
-      TimelineClientRpc.MethodOptions.SetWindow rpcOptions =
-          new TimelineClientRpc.MethodOptions.SetWindow();
-      if (options != null) {
-        rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
-      }
+    Objects.requireNonNull(start, "start cannot be null");
+    Objects.requireNonNull(end, "end cannot be null");
 
-      clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
+    // Send the request to the client. We don't update the internal
+    // window range until we get the range change event from the
+    // client because the actual range may be different because of
+    // the items, zoom level, min/max, etc.
+    TimelineClientRpc.MethodOptions.SetWindow rpcOptions =
+        new TimelineClientRpc.MethodOptions.SetWindow();
+    if (options != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+    }
+
+    clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
+    this.windowSet = true;
   }
 
   /**
@@ -492,7 +513,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     // Convert the item IDs into the timeline item keys.
-   List<String> keyList = keyMapper.getKeys(itemIds);
+    List<String> keyList = keyMapper.getKeys(itemIds);
     String[] keys = new String[keyList.size()];
     keyList.toArray(keys);
 
@@ -653,23 +674,20 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
     @Override
     public void rangeChanged(long start, long end, boolean byUser) {
-      Date startDate = new Date(start);
-      Date endDate = new Date(end);
+      DateRange newWindow = new DateRange(new Date(start), new Date(end));
 
       // Only mark the items dirty and fire the event if the range
       // actually changed.
-      if (!Objects.equals(Timeline.this.startDate, startDate) || !Objects.
-          equals(Timeline.this.endDate, endDate)) {
-        Timeline.this.startDate = startDate;
-        Timeline.this.endDate = endDate;
+      if (!Objects.equals(newWindow, window)) {
+        Timeline.this.window = newWindow;
 
         // Mark the timeline as dirty so we fetch new items from the provider
         // and send them back to the client.
         Timeline.this.markItemsAsDirty();
 
-        RangeChangedListener.RangeChangedEvent evt
-            = new RangeChangedListener.RangeChangedEvent(Timeline.this,
-                startDate, endDate, byUser);
+        RangeChangedListener.RangeChangedEvent evt =
+            new RangeChangedListener.RangeChangedEvent(Timeline.this,
+                window.getStart(), window.getEnd(), byUser);
         fireEvent(evt);
       }
     }
@@ -685,7 +703,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
       for (Object itemId : newSelection) {
         if (keyMapper.isPinned(itemId) && !selection.contains(itemId)) {
           keyMapper.unpin(itemId);
-        } else if (!keyMapper.isPinned(itemId)) {
+        }
+        else if (!keyMapper.isPinned(itemId)) {
           keyMapper.pin(itemId);
         }
       }
@@ -697,8 +716,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
       // Only fire the event if the selection actually changed. This is more
       // consistent with Vaadin components.
       if (!selection.equals(oldSelection)) {
-        SelectListener.SelectEvent evt =
- new SelectListener.SelectEvent(
+        SelectListener.SelectEvent evt = new SelectListener.SelectEvent(
             Timeline.this, selection);
 
         fireEvent(evt);

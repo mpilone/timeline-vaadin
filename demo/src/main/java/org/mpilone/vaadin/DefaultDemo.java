@@ -142,8 +142,9 @@ public class DefaultDemo extends VerticalLayout {
       @Override
       public void buttonClick(Button.ClickEvent event) {
         TimelineItemProvider provider = timeline.getItemProvider();
-        List<TimelineItem> items = provider.getItems(timeline.getWindowStart(),
-            timeline.getWindowEnd());
+        List<TimelineItem> items = provider.getItems(timeline.getWindow().
+            getStart(),
+            timeline.getWindow().getEnd());
 
         int index = (int) (Math.random() * items.size());
         TimelineItem item = items.get(index);
@@ -167,6 +168,8 @@ public class DefaultDemo extends VerticalLayout {
   private Component buildTimeControls(final Timeline timeline) {
     Panel panel = new Panel("Time Controls");
 
+    Calendar cal = Calendar.getInstance();
+
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
     controlLayout.setMargin(true);
@@ -174,12 +177,13 @@ public class DefaultDemo extends VerticalLayout {
 
     final DateField startDt = new DateField();
     startDt.setResolution(Resolution.SECOND);
-    startDt.setValue(timeline.getWindowStart());
+    startDt.setValue(cal.getTime());
     controlLayout.addComponent(startDt);
 
+    cal.add(Calendar.HOUR, 8);
     final DateField endDt = new DateField();
     endDt.setResolution(Resolution.SECOND);
-    endDt.setValue(timeline.getWindowEnd());
+    endDt.setValue(cal.getTime());
     controlLayout.addComponent(endDt);
 
     Button btn = new Button("Set Window", new Button.ClickListener() {
@@ -254,6 +258,7 @@ public class DefaultDemo extends VerticalLayout {
   private Component buildZoomControls(final Timeline timeline) {
 
     Panel panel = new Panel("Bounds Controls");
+    Calendar cal = Calendar.getInstance();
 
     VerticalLayout controlLayout = new VerticalLayout();
     controlLayout.setSpacing(true);
@@ -282,12 +287,13 @@ public class DefaultDemo extends VerticalLayout {
     // Min/max
     final DateField minDt = new DateField();
     minDt.setResolution(Resolution.SECOND);
-    minDt.setValue(timeline.getWindowStart());
+    minDt.setValue(cal.getTime());
     controlLayout.addComponent(minDt);
 
+    cal.add(Calendar.HOUR, 8);
     final DateField maxDt = new DateField();
     maxDt.setResolution(Resolution.SECOND);
-    maxDt.setValue(timeline.getWindowEnd());
+    maxDt.setValue(cal.getTime());
     controlLayout.addComponent(maxDt);
 
     btn = new Button("Apply Min/Max", new Button.ClickListener() {
