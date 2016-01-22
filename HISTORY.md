@@ -1,6 +1,6 @@
 # Timeline for Vaadin History
 
-## 2016-01-XX, v2.2.0
+## 2016-01-22, v2.2.0
 
 - Updated to vis.js 4.12.0.
 - Fixed a NPE if groups were not set before the initial send to the client.

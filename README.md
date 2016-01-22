@@ -37,6 +37,10 @@ The demo can be executed with the following commands:
 You can then view the demo by going to 
 `http://localhost:8090/timeline-vaadin-demo/app/`.
 
+### Demo Screenshot
+
+![Demo Screenshot](/docs/Timeline_for_Vaadin_Demo.png?raw=true "Demo Screenshot")
+
 ## Not Implemented Yet
 
   - Events on item move, update, add, remove
