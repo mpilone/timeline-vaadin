@@ -14,14 +14,16 @@ import org.mpilone.vaadin.timeline.TimelineOptions.ItemType;
  */
 public class BasicTimelineItem implements TimelineItem {
 
-  private String groupId;
-  private Date start;
-  private Date end;
-  private String content;
-  private ItemType type;
   private String styleName;
+  private String content;
+  private Date end;
+  private String groupId;
   private Object id;
+  private Date start;
+  private String style;
+  private String subgroupId;
   private String title;
+  private ItemType type;
   private Boolean editable;
 
   /**
@@ -168,6 +170,24 @@ public class BasicTimelineItem implements TimelineItem {
   @Override
   public Boolean getEditable() {
     return editable;
+  }
+
+  @Override
+  public String getStyle() {
+    return style;
+  }
+
+  public void setStyle(String style) {
+    this.style = style;
+  }
+
+  @Override
+  public String getSubgroupId() {
+    return subgroupId;
+  }
+
+  public void setSubgroupId(String subgroupId) {
+    this.subgroupId = subgroupId;
   }
 
 }

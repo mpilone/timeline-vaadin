@@ -32,4 +32,36 @@ public interface TimelineGroup {
    */
   public String getStyleName();
 
+  /**
+   * Optional field that can be used for sorting using the groupOrder
+   * configuration option.
+   *
+   * @return the order value
+   */
+  public String getOrder();
+
+  /**
+   * A css text string to apply custom styling for an individual group label,
+   * for example "color: red; background-color: pink;".
+   *
+   * @return the optional style
+   */
+  public String getStyle();
+
+  /**
+   * Order the subgroups by a field name or custom sort function. By default,
+   * groups are ordered by first-come, first-show.
+   *
+   * @return the optional subgroup order
+   */
+  public String getSubgroupOrder();
+
+  /**
+   * A title for the group, displayed when holding the mouse on the groups
+   * label. The title can only contain plain text.
+   *
+   * @return the title
+   */
+  public String getTitle();
+
 }

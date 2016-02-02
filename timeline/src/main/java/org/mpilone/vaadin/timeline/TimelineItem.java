@@ -81,4 +81,23 @@ public interface TimelineItem {
    * editable flag
    */
   public Boolean getEditable();
+
+  /**
+   * A css text string to apply custom styling for an individual item, for
+   * example "color: red; background-color: pink;".
+   *
+   * @return the optional CSS style
+   */
+  public String getStyle();
+
+  /**
+   * This field is optional. When the group column is provided, all items with
+   * the same group are placed on one line. A vertical axis is displayed showing
+   * the groups. Grouping items can be useful for example when showing
+   * availability of multiple people, rooms, or other resources next to each
+   * other.
+   *
+   * @return the subgroup ID
+   */
+  public String getSubgroupId();
 }

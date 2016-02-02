@@ -141,21 +141,27 @@ public interface TimelineClientRpc extends ClientRpc {
 
   public static class Group {
 
-    public String id;
-    public String content;
     public String className;
+    public String content;
+    public String id;
+    public String style;
+    public String order;
+    public String subgroupOrder;
+    public String title;
   }
 
   public static class Item {
 
+    public String className;
+    public String content;
+    public long end;
+    public String group;
     public String id;
     public long start;
-    public long end;
-    public String content;
-    public String className;
-    public String group;
-    public String type;
+    public String style;
+    public String subgroup;
     public String title;
+    public String type;
     public Boolean editable;
   }
 }

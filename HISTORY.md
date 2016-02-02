@@ -1,5 +1,12 @@
 # Timeline for Vaadin History
 
+## 2016-02-02, v2.3.0
+
+- Updated to vis.js 4.13.0.
+- Added support for order, style, subgroupOrder, and title properties on a group. (API breaking change)
+- Added support for style and subgroupId properties on an item. (API breaking change)
+- Fixed a bug where the window range would reset to the default if the timeline visibility was toggled.
+
 ## 2016-01-22, v2.2.0
 
 - Updated to vis.js 4.12.0.

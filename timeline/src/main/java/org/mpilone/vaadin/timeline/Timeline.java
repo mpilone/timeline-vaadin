@@ -382,6 +382,10 @@ public class Timeline extends AbstractJavaScriptComponent implements
       group.className = g.getStyleName() == null ? "" : g.getStyleName();
       group.content = g.getContent();
       group.id = g.getId();
+      group.order = g.getOrder();
+      group.style = g.getStyle();
+      group.subgroupOrder = g.getSubgroupOrder();
+      group.title = g.getTitle();
       rpcGroups[i++] = group;
     }
     clientRpc.setGroups(rpcGroups);
@@ -403,16 +407,17 @@ public class Timeline extends AbstractJavaScriptComponent implements
       itemIds.add(item.getId());
 
       TimelineClientRpc.Item rpcItem = new TimelineClientRpc.Item();
-      rpcItem.id = keyMapper.getKey(item.getId());
+      rpcItem.className = item.getStyleName();
       rpcItem.content = item.getContent() == null ? "" : item.getContent();
-      rpcItem.start = item.getStart().getTime();
       rpcItem.end = item.getEnd().getTime();
-      rpcItem.className = item.getStyleName() == null ? "" : item
-          .getStyleName();
       rpcItem.group = item.getGroupId();
+      rpcItem.id = keyMapper.getKey(item.getId());
+      rpcItem.start = item.getStart().getTime();
+      rpcItem.style = item.getStyle();
+      rpcItem.subgroup = item.getSubgroupId();
+      rpcItem.title = item.getTitle();
       rpcItem.type = item.getType() == null ? null : item.getType().name().
           toLowerCase();
-      rpcItem.title = item.getTitle();
       rpcItem.editable = item.getEditable();
 
       rpcItems[j++] = rpcItem;
