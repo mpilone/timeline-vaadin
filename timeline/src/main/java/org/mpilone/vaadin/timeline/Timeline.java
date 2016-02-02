@@ -47,7 +47,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
       .getInstance();
   private DateRange window;
   private boolean itemsDirty;
-  private boolean windowSet;
+  private boolean windowDirty;
 
   /**
    * Constructs the timeline with no caption and an empty item provider.
@@ -339,8 +339,30 @@ public class Timeline extends AbstractJavaScriptComponent implements
     super.beforeClientResponse(initial);
 
     if (initial) {
-      // Use a default 8 hour window if the user didn't set one yet.
-      if (!windowSet) {
+      boolean windowValid = !window.getStart().equals(window.getEnd());
+
+      if (windowDirty) {
+          // We don't need to do anything because a new window is being sent
+        // to the client. We'll send the items when we get the change event
+        // from the client with the new window.
+      }
+      else if (windowValid) {
+          // Reuse the existing window. Normally this happens when the timeline
+        // was previously displayed and hidden. We basically want to restore
+        // the state on this initial display. We have to immediately send the
+        // items because we won't get a window change event because the
+        // window isn't changing, just restoring to the existing value.
+        setWindow(window.getStart(), window.getEnd(), null);
+        sendItemsToClient();
+      }
+      else {
+        // The window is not dirty and the current window is not valid.
+        // This means we have to initialize the window for the first time
+        // to some intelligent default.
+        //
+        // Wait for the initial range change before sending items because
+        // the actual window may be modified on the client based on
+        // zoom, min/max, etc.
         Date start = currentCalendar.getTime();
         currentCalendar.add(java.util.Calendar.HOUR, 8);
         Date end = currentCalendar.getTime();
@@ -349,15 +371,13 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
       sendGroupsToClient();
 
-      // Wait for the initial range change before sending items because
-      // the actual window may be modified on the client based on
-      // zoom, min/max, etc.
     }
     else if (itemsDirty) {
       sendItemsToClient();
     }
 
     itemsDirty = false;
+    windowDirty = false;
   }
 
   @Override
@@ -468,7 +488,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
-    this.windowSet = true;
+    windowDirty = !Objects.equals(window, new DateRange(start, end));
   }
 
   /**
