@@ -488,7 +488,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
     }
 
     clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
-    windowDirty = !Objects.equals(window, new DateRange(start, end));
+    windowDirty = windowDirty || !Objects.equals(window, new DateRange(start,
+        end));
   }
 
   /**
