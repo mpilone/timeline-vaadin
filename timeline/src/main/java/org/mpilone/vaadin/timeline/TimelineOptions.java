@@ -86,6 +86,10 @@ public interface TimelineOptions {
 
   public TimelineState.Margin getMargin();
 
+  public String getMoment();
+
+  public void setMoment(String moment);
+
   /**
    * Applies the same margin to the axis, item-horizontal, and item-vertical.
    *

@@ -60,6 +60,7 @@ class StateMappingOptions implements TimelineOptions {
     o.margin.item.vertical = 10;
     o.max = null;
     o.min = null;
+    o.moment = null;
     o.moveable = true;
     o.multiselect = false;
     o.orientation =
@@ -411,6 +412,31 @@ class StateMappingOptions implements TimelineOptions {
   @Override
   public TimelineState.FormatLabels getFormatMinorLabels() {
     return getState(false).options.format.minorLabels;
+  }
+
+  @Override
+  public String getMoment() {
+    return getState(false).options.moment;
+  }
+
+  /**
+   * <p>
+   * A constructor for creating a moment.js Date. Allows for applying a custom
+   * time zone. See section Time zone for more information in the visjs.org
+   * documentation.
+   * </p>
+   * <p>
+   * For example, the following JS string can be used to set the time zone
+   * offset explicitly:
+   * <code>function(date) { return vis.moment(date).utcOffset('+08:00'); }</code>
+   * </p>
+   *
+   * @param moment the function to construct a moment instance from the given
+   * date
+   */
+  @Override
+  public void setMoment(String moment) {
+    getState().options.moment = moment;
   }
 
 }

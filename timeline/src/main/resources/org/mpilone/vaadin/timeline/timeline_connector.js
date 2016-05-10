@@ -232,9 +232,13 @@ org_mpilone_vaadin_timeline_Timeline = function () {
 
     console_log("State change!");
 
-//    var items = state.items; 
-//    var groups = state.groups;
     var options = state.options;
+    
+    // Convert the JS string into a real function.
+    if (options.moment) {
+      options.moment = Function('return ' + options.moment)();
+    }
+    
     timeline.setOptions(options);
   };
 

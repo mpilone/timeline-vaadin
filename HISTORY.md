@@ -1,5 +1,12 @@
 # Timeline for Vaadin History
 
+## 2016-05-10, v2.4.0
+
+- Updated to vis.js 4.16.1
+- Added support for the 'moment' configuration option to set a moment constructor function.
+- Added TimelineTimeZone extension to support time zones in the moment configuration option.
+- Added a time zone selector to the demo.
+
 ## 2016-02-02, v2.3.0
 
 - Updated to vis.js 4.13.0.

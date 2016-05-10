@@ -67,6 +67,7 @@ public class TimelineState extends JavaScriptComponentState {
     public Margin margin;
     public Long max;
     public Long min;
+    public String moment;
     public boolean moveable;
     public boolean multiselect;
     public String orientation;

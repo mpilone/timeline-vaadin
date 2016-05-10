@@ -260,6 +260,40 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
+    final ComboBox timeZoneCmb = new ComboBox();
+    timeZoneCmb.addItem("Africa/Cairo");
+    timeZoneCmb.addItem("America/New_York");
+    timeZoneCmb.addItem("America/Chicago");
+    timeZoneCmb.addItem("America/Los_Angeles");
+    timeZoneCmb.addItem("Asia/Hong_Kong");
+    timeZoneCmb.addItem("Asia/Seoul");
+    timeZoneCmb.addItem("Etc/UTC");
+    timeZoneCmb.addItem("Europe/London");
+    timeZoneCmb.addItem("Europe/Paris");
+    timeZoneCmb.setNewItemsAllowed(false);
+    timeZoneCmb.setNullSelectionAllowed(true);
+    controlLayout.addComponent(timeZoneCmb);
+
+    final Button tzBtn = new Button("Apply Time Zone");
+    tzBtn.addClickListener(new Button.ClickListener() {
+      @Override
+      public void buttonClick(Button.ClickEvent event) {
+        if (tzBtn.getData() != null) {
+          TimelineTimeZone e = (TimelineTimeZone) tzBtn.getData();
+          e.remove();
+          tzBtn.setData(null);
+          timeline.getOptions().setMoment(null);
+        }
+
+        if (timeZoneCmb.getValue() != null) {
+          TimelineTimeZone e = TimelineTimeZone.extend(timeline,
+              (String) timeZoneCmb.getValue());
+          tzBtn.setData(e);
+        }
+      }
+    });
+    controlLayout.addComponent(tzBtn);
+
     return panel;
   }
 
