@@ -68,6 +68,19 @@ public class TimelineTimeZone extends AbstractJavaScriptExtension {
   }
 
   /**
+   * A convenience method for calling
+   * <code>extend(timeline, timeZone.getId())</code>.
+   *
+   * @param timeline the timeline to extend
+   * @param timeZone the time zone to apply to the timeline
+   *
+   * @return the new extension instance
+   */
+  public static TimelineTimeZone extend(Timeline timeline, TimeZone timeZone) {
+    return extend(timeline, timeZone.getID());
+  }
+
+  /**
    * <p>
    * Calls {@link TimelineOptions#setMoment(java.lang.String) } with a
    * JavaScript function that will properly initialize the moment with the given
