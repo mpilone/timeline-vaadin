@@ -28,9 +28,8 @@ import com.vaadin.ui.*;
  *
  * @author mpilone
  */
-@StyleSheet({"vis/dist/vis.min.css", "vis/dist/vis.map",
-  "vis/dist/img/timeline/delete.png"})
-@JavaScript({"timeline_connector.js", "vis/dist/vis.min.js"})
+@StyleSheet({"vis/dist/vis.min.css", "vis/dist/img/timeline/delete.png"})
+@JavaScript({"timeline_connector.js", "vis/dist/vis-timeline-graph2d.min.js"})
 public class Timeline extends AbstractJavaScriptComponent implements
     TimelineItemProvider, TimelineItemProvider.Editable,
     TimelineItemProvider.ItemSetChangeListener {
@@ -46,8 +45,12 @@ public class Timeline extends AbstractJavaScriptComponent implements
   protected java.util.Calendar currentCalendar = java.util.Calendar
       .getInstance();
   private DateRange window;
+
   private boolean itemsDirty;
   private boolean windowDirty;
+  private boolean groupsDirty;
+  private DateRange pendingWindow;
+  private TimelineMethodOptions.SetWindow pendingSetWindowOptions;
 
   /**
    * Constructs the timeline with no caption and an empty item provider.
@@ -191,9 +194,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
         ((TimelineItemProvider.ItemSetChangeNotifier) provider)
             .addItemSetChangeListener(this);
       }
-    }
 
-    markItemsAsDirty();
+      markItemsAsDirty();
+    }
   }
 
   /**
@@ -213,7 +216,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void setGroups(List<TimelineGroup> groups) {
     this.groups = groups == null ? new ArrayList<TimelineGroup>() : groups;
 
-    sendGroupsToClient();
+    groupsDirty = true;
+    markAsDirty();
   }
 
   /**
@@ -338,46 +342,65 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public void beforeClientResponse(boolean initial) {
     super.beforeClientResponse(initial);
 
-    if (initial) {
-      boolean windowValid = !window.getStart().equals(window.getEnd());
+    boolean windowValid = !window.getStart().equals(window.getEnd()) || window.
+        getStart().after(window.getEnd());
+    boolean restoring = false;
+
+    if (initial && windowValid) {
+      // Normally this happens when the timeline was previously displayed 
+      // and hidden. We basically want to restore the state on this initial
+      // display.
+      restoring = true;
+
+      if (!windowDirty) {
+        // Reapply the existing window so it can be pushed back to the client.
+        setWindow(window.getStart(), window.getEnd(), null);
+      }
+    }
+    else if (initial && !windowDirty) {
+      // The window is not dirty and the current window is not valid.
+      // This means we have to initialize the window for the first time
+      // to some intelligent default.
+      Date start = currentCalendar.getTime();
+      currentCalendar.add(java.util.Calendar.HOUR, 8);
+      Date end = currentCalendar.getTime();
+      setWindow(start, end, null);
+    }
+
+    if (restoring) {
+      // Send everything to the client. We know we have a valid window so
+      // we can send items and if the window hasn't changed we won't get a
+      // range change event so it is now or never. If the window did change,
+      // we will get a range change but that will be handled properly
+      // and we will resend the items in the next request. So there is a chance
+      // of sending the items twice but we have to assume the window
+      // didn't change.
+      sendGroupsToClient();
+      sendItemsToClient();
+      sendWindowToClient();
+    }
+    else {
+      if (groupsDirty) {
+        sendGroupsToClient();
+      }
 
       if (windowDirty) {
-          // We don't need to do anything because a new window is being sent
-        // to the client. We'll send the items when we get the change event
-        // from the client with the new window.
+        // Send the dirty window which will trigger a range change event
+        // for the items later.
+        sendWindowToClient();
       }
-      else if (windowValid) {
-          // Reuse the existing window. Normally this happens when the timeline
-        // was previously displayed and hidden. We basically want to restore
-        // the state on this initial display. We have to immediately send the
-        // items because we won't get a window change event because the
-        // window isn't changing, just restoring to the existing value.
-        setWindow(window.getStart(), window.getEnd(), null);
+      else if (itemsDirty && windowValid) {
+        // The window isn't dirty so we're not expecting a range change
+        // event. If we have a valid window, go ahead and send the items.
+        // Because of the delay from sending the window to the client and
+        // getting the range change event, we can get into the state of the
+        // window not being dirty (because we sent it) but the window not
+        // being valid yet (because we didn't get the range change event).
+        // We don't want to send the items yet in this state because we'd
+        // query the item provider with an invalid range.
         sendItemsToClient();
       }
-      else {
-        // The window is not dirty and the current window is not valid.
-        // This means we have to initialize the window for the first time
-        // to some intelligent default.
-        //
-        // Wait for the initial range change before sending items because
-        // the actual window may be modified on the client based on
-        // zoom, min/max, etc.
-        Date start = currentCalendar.getTime();
-        currentCalendar.add(java.util.Calendar.HOUR, 8);
-        Date end = currentCalendar.getTime();
-        setWindow(start, end, null);
-      }
-
-      sendGroupsToClient();
-
     }
-    else if (itemsDirty) {
-      sendItemsToClient();
-    }
-
-    itemsDirty = false;
-    windowDirty = false;
   }
 
   @Override
@@ -409,6 +432,8 @@ public class Timeline extends AbstractJavaScriptComponent implements
       rpcGroups[i++] = group;
     }
     clientRpc.setGroups(rpcGroups);
+
+    groupsDirty = false;
   }
 
   /**
@@ -449,6 +474,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
     // Set the items.
     clientRpc.setItems(rpcItems);
 
+    // Clear the dirty flag now that we sent the items.
+    itemsDirty = false;
+
     // Reapply the selection in the event that a selected item move out of
     // the window and back in again.
     setSelection(selection, new TimelineMethodOptions.SetSelection(false,
@@ -463,8 +491,9 @@ public class Timeline extends AbstractJavaScriptComponent implements
    * </p>
    * <p>
    * Note that the window range is sent to the client and the internal state of
-   * the timeline is not modified until the client generates a range change
-   * event.
+   * the timeline window is not modified until the client generates a range
+   * change event. This is required because the client may modify the window
+   * based on zoom, min/max, scaling, etc.
    * </p>
    *
    * @param start the start date
@@ -476,20 +505,41 @@ public class Timeline extends AbstractJavaScriptComponent implements
 
     Objects.requireNonNull(start, "start cannot be null");
     Objects.requireNonNull(end, "end cannot be null");
+    if (start.after(end) || start.equals(end)) {
+      throw new IllegalArgumentException("start date must be before end date.");
+    }
 
+    pendingWindow = new DateRange(start, end);
+    pendingSetWindowOptions = options;
+
+    //if (windowDirty || !Objects.equals(window, pendingWindow)) {
+      windowDirty = true;
+      markAsDirty();
+    //}
+  }
+
+  /**
+   * Sends the pending window to the client and clears the dirty state of the
+   * window.
+   */
+  private void sendWindowToClient() {
     // Send the request to the client. We don't update the internal
     // window range until we get the range change event from the
     // client because the actual range may be different because of
     // the items, zoom level, min/max, etc.
     TimelineClientRpc.MethodOptions.SetWindow rpcOptions =
         new TimelineClientRpc.MethodOptions.SetWindow();
-    if (options != null) {
-      rpcOptions.animation = TimelineMethodOptions.map(options.getAnimation());
+    if (pendingSetWindowOptions != null) {
+      rpcOptions.animation = TimelineMethodOptions.map(pendingSetWindowOptions.
+          getAnimation());
     }
 
-    clientRpc.setWindow(start.getTime(), end.getTime(), rpcOptions);
-    windowDirty = windowDirty || !Objects.equals(window, new DateRange(start,
-        end));
+    clientRpc.setWindow(pendingWindow.getStart().getTime(), pendingWindow.
+        getEnd().getTime(), rpcOptions);
+
+    windowDirty = false;
+    pendingSetWindowOptions = null;
+    pendingWindow = null;
   }
 
   /**

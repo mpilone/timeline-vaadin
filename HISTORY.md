@@ -1,5 +1,11 @@
 # Timeline for Vaadin History
 
+## 2016-06-03, v2.4.1
+
+- Fixed an issue where the timeline could render with the default window range (Jan 1, 1970 - Jan 1, 1970) if setWindow wsn't called before the initial response to the client.
+- Groups, items, and window is now only sent once in the response to the client rather than each time the setter is called on the server.
+- Removed vis.map from the published files on the component because it is only needed for debugging.
+
 ## 2016-05-10, v2.4.0
 
 - Updated to vis.js 4.16.1
