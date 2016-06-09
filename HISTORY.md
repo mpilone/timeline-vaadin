@@ -1,5 +1,9 @@
 # Timeline for Vaadin History
 
+## 2016-06-09, v2.4.2
+
+- Added support for the AUTO item alignment and changed the default to match the new Timeline default.
+
 ## 2016-06-03, v2.4.1
 
 - Fixed an issue where the timeline could render with the default window range (Jan 1, 1970 - Jan 1, 1970) if setWindow wsn't called before the initial response to the client.

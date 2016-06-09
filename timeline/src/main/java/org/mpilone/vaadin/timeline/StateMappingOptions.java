@@ -24,7 +24,7 @@ class StateMappingOptions implements TimelineOptions {
   public StateMappingOptions(Timeline timeline) {
     this.timeline = timeline;
     TimelineState.Options o = new TimelineState.Options();
-    o.align = TimelineOptions.ItemAlignment.CENTER.name().toLowerCase();
+    o.align = TimelineOptions.ItemAlignment.AUTO.name().toLowerCase();
     o.autoResize = true;
     o.clickToUse = false;
     o.editable = new TimelineState.Editable();

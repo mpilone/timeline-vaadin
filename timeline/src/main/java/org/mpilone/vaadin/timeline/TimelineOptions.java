@@ -192,6 +192,8 @@ public interface TimelineOptions {
    * The alignment of items with type {@link ItemType#BOX}.
    */
   public enum ItemAlignment {
+
+    AUTO,
     LEFT,
     CENTER,
     RIGHT
