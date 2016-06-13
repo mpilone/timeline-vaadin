@@ -52,21 +52,14 @@ public interface TimelineOptions {
 
   public void setAutoResize(boolean autoResize);
 
-  public boolean isEditAdd();
+  public TimelineState.Editable getEditable();
 
-  public void setEditAdd(boolean editAdd);
+  public void setEditable(TimelineState.Editable editable);
 
-  public boolean isEditRemove();
-
-  public void setEditRemove(boolean editRemove);
-
-  public boolean isEditUpdateGroup();
-
-  public void setEditUpdateGroup(boolean editUpdateGroup);
-
-  public boolean isEditUpdateTime();
-
-  public void setEditUpdateTime(boolean editUpdateTime);
+  public void setEditableAdd(boolean editAdd);
+  public void setEditableRemove(boolean editRemove);
+  public void setEditableUpdateGroup(boolean editUpdateGroup);
+  public void setEditableUpdateTime(boolean editUpdateTime);
 
   public Date getEnd();
 
@@ -106,9 +99,13 @@ public interface TimelineOptions {
 
   public void setMin(Date min);
 
-  public TimeAxisOrientation getOrientation();
+  public TimelineState.Orientation getOrientation();
 
-  public void setOrientation(TimeAxisOrientation orientation);
+  public void setOrientation(TimelineState.Orientation orientation);
+
+  public void setOrientationItem(ItemOrientation orientation);
+
+  public void setOrientationAxis(TimeAxisOrientation orientation);
 
   /**
    * If true, the timeline shows a red, vertical line displaying the current
@@ -170,6 +167,16 @@ public interface TimelineOptions {
    * The orientation (i.e. location) of the time axis on the timeline.
    */
   public enum TimeAxisOrientation {
+    NONE,
+    BOTH,
+    BOTTOM,
+    TOP
+  }
+
+  /**
+   * The orientation (i.e. location) of the item on the timeline.
+   */
+  public enum ItemOrientation {
 
     BOTTOM,
     TOP

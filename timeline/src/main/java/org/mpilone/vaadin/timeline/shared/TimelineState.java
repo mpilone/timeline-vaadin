@@ -55,6 +55,12 @@ public class TimelineState extends JavaScriptComponentState {
     public int horizontal;
   }
 
+  public static class Orientation {
+
+    public String axis;
+    public String item;
+  }
+
   public static class Options {
 
     public String align;
@@ -70,7 +76,7 @@ public class TimelineState extends JavaScriptComponentState {
     public String moment;
     public boolean moveable;
     public boolean multiselect;
-    public String orientation;
+    public Orientation orientation;
     public boolean selectable;
     public boolean showCurrentTime;
     public boolean showMajorLabels;

@@ -63,8 +63,11 @@ class StateMappingOptions implements TimelineOptions {
     o.moment = null;
     o.moveable = true;
     o.multiselect = false;
-    o.orientation =
-        TimelineOptions.TimeAxisOrientation.BOTTOM.name().toLowerCase();
+    o.orientation = new TimelineState.Orientation();
+    o.orientation.axis = TimelineOptions.TimeAxisOrientation.BOTTOM.name().
+        toLowerCase();
+    o.orientation.item = TimelineOptions.TimeAxisOrientation.BOTTOM.name().
+        toLowerCase();
     o.selectable = true;
     o.showCurrentTime = true;
     o.showMajorLabels = true;
@@ -154,42 +157,32 @@ class StateMappingOptions implements TimelineOptions {
   }
 
   @Override
-  public boolean isEditAdd() {
-    return getState(false).options.editable.add;
+  public TimelineState.Editable getEditable() {
+    return getState(false).options.editable;
   }
 
   @Override
-  public void setEditAdd(boolean editAdd) {
+  public void setEditable(TimelineState.Editable editable) {
+    getState().options.editable = editable;
+  }
+
+  @Override
+  public void setEditableAdd(boolean editAdd) {
     getState().options.editable.add = editAdd;
   }
 
   @Override
-  public boolean isEditRemove() {
-    return getState(false).options.editable.remove;
-  }
-
-  @Override
-  public void setEditRemove(boolean editRemove) {
+  public void setEditableRemove(boolean editRemove) {
     getState().options.editable.remove = editRemove;
   }
 
   @Override
-  public boolean isEditUpdateGroup() {
-    return getState(false).options.editable.updateGroup;
-  }
-
-  @Override
-  public void setEditUpdateGroup(boolean editUpdateGroup) {
+  public void setEditableUpdateGroup(boolean editUpdateGroup) {
     getState().options.editable.updateGroup = editUpdateGroup;
   }
 
   @Override
-  public boolean isEditUpdateTime() {
-    return getState(false).options.editable.updateTime;
-  }
-
-  @Override
-  public void setEditUpdateTime(boolean editUpdateTime) {
+  public void setEditableUpdateTime(boolean editUpdateTime) {
     getState().options.editable.updateTime = editUpdateTime;
   }
 
@@ -259,15 +252,37 @@ class StateMappingOptions implements TimelineOptions {
   }
 
   @Override
-  public TimelineOptions.TimeAxisOrientation getOrientation() {
-    return TimelineOptions.TimeAxisOrientation.valueOf(
-        getState(false).options.orientation.toUpperCase());
+  public TimelineState.Orientation getOrientation() {
+    return getState(false).options.orientation;
   }
 
   @Override
-  public void setOrientation(
-      TimelineOptions.TimeAxisOrientation orientation) {
-    getState().options.orientation = orientation.name().toLowerCase();
+  public void setOrientation(TimelineState.Orientation orientation) {
+    getState().options.orientation = orientation;
+  }
+
+  @Override
+  public void setOrientationItem(ItemOrientation orientation) {
+    TimelineState.Orientation o = getState(false).options.orientation;
+
+    if (o == null) {
+      o = new TimelineState.Orientation();
+    }
+    o.item = orientation.name().toLowerCase();
+
+    setOrientation(o);
+  }
+
+  @Override
+  public void setOrientationAxis(TimeAxisOrientation orientation) {
+    TimelineState.Orientation o = getState(false).options.orientation;
+
+    if (o == null) {
+      o = new TimelineState.Orientation();
+    }
+    o.axis = orientation.name().toLowerCase();
+
+    setOrientation(o);
   }
 
   @Override

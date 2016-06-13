@@ -1,5 +1,12 @@
 # Timeline for Vaadin History
 
+## 2016-06-13, v2.5.0
+
+- Added support for item orientation separate from axis orientation. (API breaking change)
+- Added support for "none" and "both" axis orientations.
+- Modified the editable option to be more consistent with other nested options. (API breaking change)
+- Updated the demo to include item and axis orientation selection.
+
 ## 2016-06-09, v2.4.2
 
 - Added support for the AUTO item alignment and changed the default to match the new Timeline default.
