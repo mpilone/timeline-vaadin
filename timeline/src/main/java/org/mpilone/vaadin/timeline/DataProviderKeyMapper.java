@@ -1,8 +1,6 @@
 
 package org.mpilone.vaadin.timeline;
 
-import com.google.gwt.thirdparty.guava.common.collect.BiMap;
-import com.google.gwt.thirdparty.guava.common.collect.HashBiMap;
 import java.io.Serializable;
 import java.util.*;
 
@@ -17,7 +15,7 @@ import java.util.*;
  */
 class DataProviderKeyMapper implements Serializable {
 
-  private final BiMap<Object, String> itemIdToKey = HashBiMap.create();
+  private final Map<Object, String> itemIdToKey = new HashMap();
   private final Set<Object> pinnedItemIds = new HashSet<>();
   private long rollingIndex = 0;
 
@@ -96,13 +94,20 @@ class DataProviderKeyMapper implements Serializable {
    * {@code key} .
    */
   public Object getItemId(String key) throws IllegalStateException {
-    Object itemId = itemIdToKey.inverse().get(key);
+    Object itemId = getByValue(itemIdToKey, key);
     if (itemId != null) {
       return itemId;
     } else {
       throw new IllegalStateException("No item id for key " + key
           + " found.");
     }
+  }
+
+  private <K, V> K getByValue(Map<K, V> map, V value) {
+    return map.entrySet().stream().filter(entry -> {
+      return Objects.equals(entry.getValue(), value);
+    }).map(entry -> entry.getKey()).findFirst().orElse(null);
+
   }
 
   /**

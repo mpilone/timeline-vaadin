@@ -7,10 +7,9 @@ import org.mpilone.vaadin.timeline.ContextMenuListener.ContextMenuEvent;
 import org.mpilone.vaadin.timeline.DoubleClickListener.DoubleClickEvent;
 import org.mpilone.vaadin.timeline.shared.*;
 
-import com.vaadin.annotations.*;
 import com.vaadin.annotations.JavaScript;
-import com.vaadin.data.Container;
-import com.vaadin.ui.*;
+import com.vaadin.annotations.StyleSheet;
+import com.vaadin.ui.AbstractJavaScriptComponent;
 
 /**
  * <p>
@@ -167,7 +166,7 @@ public class Timeline extends AbstractJavaScriptComponent implements
   public DateRange getWindow() {
     return window;
   }
-
+  
   /**
    * Set the {@link TimelineItemProvider} to be used with this timeline. The
    * provider is used to query for items to show. By default a
@@ -645,23 +644,6 @@ public class Timeline extends AbstractJavaScriptComponent implements
     clientRpc.setCurrentTime(time.getTime());
   }
 
-  /**
-   * Sets a container as a data source for the items in the timeline. This is a
-   * convenience method for doing
-   * {@code Timeline.setItemProvider(new ContainerItemProvider(container))}. Use
-   * this method if you are adding a container which uses the default property
-   * IDs and cannot support the sorting optimization of the
-   * {@link ContainerItemProvider}. If you are using custom properties or
-   * sorting, use
-   * {@link #setItemProvider(org.mpilone.vaadin.timeline.TimelineItemProvider)}
-   * with a configured {@link ContainerItemProvider}.
-   *
-   * @param container the container to use as a datasource
-   */
-  public void setContainerDataSource(Container container) {
-    setItemProvider(new ContainerItemProvider(container));
-  }
-
   @Override
   public List<TimelineItem> getItems(Date startDate, Date endDate) {
     return getItemProvider().getItems(startDate, endDate);
@@ -680,6 +662,16 @@ public class Timeline extends AbstractJavaScriptComponent implements
           "Item provider does not support adding events");
     }
   }
+  //
+  // @Override
+  // public boolean isReadOnly() {
+  // return super.isReadOnly();
+  // }
+  //
+  // @Override
+  // public void setReadOnly(boolean readOnly) {
+  // super.setReadOnly(readOnly);
+  // }
 
   @Override
   public void removeItem(TimelineItem item) {

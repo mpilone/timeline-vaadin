@@ -1,13 +1,12 @@
 package org.mpilone.vaadin;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.Calendar;
 
 import org.mpilone.vaadin.timeline.*;
 
-import com.vaadin.data.Property;
-import com.vaadin.shared.ui.combobox.FilteringMode;
-import com.vaadin.shared.ui.datefield.Resolution;
+import com.vaadin.shared.ui.datefield.DateTimeResolution;
 import com.vaadin.ui.*;
 
 /**
@@ -138,21 +137,25 @@ public class DefaultDemo extends VerticalLayout {
     controlLayout.setMargin(true);
     panel.setContent(controlLayout);
 
-    final DateField startDt = new DateField();
-    startDt.setResolution(Resolution.SECOND);
-    startDt.setValue(cal.getTime());
+    final DateTimeField startDt = new DateTimeField();
+    startDt.setResolution(DateTimeResolution.SECOND);
+    startDt.setValue(LocalDateTime.ofInstant(cal.toInstant(), cal.getTimeZone().toZoneId()));
     controlLayout.addComponent(startDt);
 
     cal.add(Calendar.HOUR, 8);
-    final DateField endDt = new DateField();
-    endDt.setResolution(Resolution.SECOND);
-    endDt.setValue(cal.getTime());
+    final DateTimeField endDt = new DateTimeField();
+    endDt.setResolution(DateTimeResolution.SECOND);
+    endDt.setValue(LocalDateTime.ofInstant(cal.toInstant(), cal.getTimeZone().toZoneId()));
     controlLayout.addComponent(endDt);
 
     Button btn = new Button("Set Window", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
-        timeline.setWindow(startDt.getValue(), endDt.getValue(),
+
+        Date start = Date.from(startDt.getValue().atZone(cal.getTimeZone().toZoneId()).toInstant());
+        Date end = Date.from(endDt.getValue().atZone(cal.getTimeZone().toZoneId()).toInstant());
+
+        timeline.setWindow(start, end,
             new TimelineMethodOptions.SetWindow(new Animation(1000,
                     Animation.EasingFunction.easeInCubic)));
       }
@@ -171,17 +174,15 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
-    final DateField currentTimeDt = new DateField();
-    currentTimeDt.setResolution(Resolution.SECOND);
-    currentTimeDt.setValue(new Date());
+    final DateTimeField currentTimeDt = new DateTimeField();
+    currentTimeDt.setResolution(DateTimeResolution.SECOND);
+    currentTimeDt.setValue(LocalDateTime.now());
     controlLayout.addComponent(currentTimeDt);
     
-    btn = new Button("Set Current Time", new Button.ClickListener() {
-      @Override
-      public void buttonClick(Button.ClickEvent event) {
-        timeline.setCurrentTime(currentTimeDt.getValue());
-      }
-    });
+    btn = new Button("Set Current Time", event -> {
+          timeline.setCurrentTime(
+              Date.from(currentTimeDt.getValue().atZone(ZoneId.systemDefault()).toInstant()));
+        });
     controlLayout.addComponent(btn);
 
     btn = new Button("Add Custom Time", new Button.ClickListener() {
@@ -192,26 +193,21 @@ public class DefaultDemo extends VerticalLayout {
     });
     controlLayout.addComponent(btn);
 
-    final DateField moveToDt = new DateField();
-    moveToDt.setResolution(Resolution.SECOND);
-    moveToDt.setValue(new Date());
+    final DateTimeField moveToDt = new DateTimeField();
+    moveToDt.setResolution(DateTimeResolution.SECOND);
+    moveToDt.setValue(LocalDateTime.now());
     controlLayout.addComponent(moveToDt);
 
-    btn = new Button("Move To", new Button.ClickListener() {
-      @Override
-      public void buttonClick(Button.ClickEvent event) {
-        timeline.moveTo(moveToDt.getValue(), new TimelineMethodOptions.MoveTo(
+    btn = new Button("Move To", evt -> {
+      timeline.moveTo(Date.from(moveToDt.getValue().atZone(ZoneId.systemDefault()).toInstant()),
+          new TimelineMethodOptions.MoveTo(
             new Animation(1000, Animation.EasingFunction.easeInOutQuad)));
-      }
     });
     controlLayout.addComponent(btn);
 
-    btn = new Button("Fit", new Button.ClickListener() {
-      @Override
-      public void buttonClick(Button.ClickEvent event) {
+    btn = new Button("Fit", evt -> {
         timeline.fit(new TimelineMethodOptions.Fit(new Animation(750,
             Animation.EasingFunction.easeInOutQuint)));
-      }
     });
     controlLayout.addComponent(btn);
 
@@ -224,50 +220,41 @@ public class DefaultDemo extends VerticalLayout {
     zoomMax.setValue(String.valueOf(timeline.getOptions().getZoomMax() / 1000));
     controlLayout.addComponent(zoomMax);
 
-    btn = new Button("Apply Zoom Min/Max", new Button.ClickListener() {
-      @Override
-      public void buttonClick(Button.ClickEvent event) {
-        TimelineOptions options = timeline.getOptions();
-        options.setZoomMin(Integer.parseInt(zoomMin.getValue()) * 1000);
-        options.setZoomMax(Integer.parseInt(zoomMax.getValue()) * 1000);
-      }
+    btn = new Button("Apply Zoom Min/Max", event -> {
+      TimelineOptions options = timeline.getOptions();
+      options.setZoomMin(Integer.parseInt(zoomMin.getValue()) * 1000);
+      options.setZoomMax(Integer.parseInt(zoomMax.getValue()) * 1000);
     });
     controlLayout.addComponent(btn);
 
     // Min/max
-    final DateField minDt = new DateField();
-    minDt.setResolution(Resolution.SECOND);
-    minDt.setValue(cal.getTime());
+    final DateTimeField minDt = new DateTimeField();
+    minDt.setResolution(DateTimeResolution.SECOND);
+    minDt.setValue(LocalDateTime.ofInstant(cal.toInstant(), cal.getTimeZone().toZoneId()));
     controlLayout.addComponent(minDt);
 
     cal.add(Calendar.HOUR, 8);
-    final DateField maxDt = new DateField();
-    maxDt.setResolution(Resolution.SECOND);
-    maxDt.setValue(cal.getTime());
+    final DateTimeField maxDt = new DateTimeField();
+    maxDt.setResolution(DateTimeResolution.SECOND);
+    maxDt.setValue(LocalDateTime.ofInstant(cal.toInstant(), cal.getTimeZone().toZoneId()));
     controlLayout.addComponent(maxDt);
 
     btn = new Button("Apply Min/Max", new Button.ClickListener() {
       @Override
       public void buttonClick(Button.ClickEvent event) {
         TimelineOptions options = timeline.getOptions();
-        options.setMin(minDt.getValue());
-        options.setMax(maxDt.getValue());
+        options.setMin(Date.from(minDt.getValue().atZone(cal.getTimeZone().toZoneId()).toInstant()));
+        options
+            .setMax(Date.from(maxDt.getValue().atZone(cal.getTimeZone().toZoneId()).toInstant()));
       }
     });
     controlLayout.addComponent(btn);
 
     final ComboBox timeZoneCmb = new ComboBox();
-    timeZoneCmb.addItem("Africa/Cairo");
-    timeZoneCmb.addItem("America/New_York");
-    timeZoneCmb.addItem("America/Chicago");
-    timeZoneCmb.addItem("America/Los_Angeles");
-    timeZoneCmb.addItem("Asia/Hong_Kong");
-    timeZoneCmb.addItem("Asia/Seoul");
-    timeZoneCmb.addItem("Etc/UTC");
-    timeZoneCmb.addItem("Europe/London");
-    timeZoneCmb.addItem("Europe/Paris");
-    timeZoneCmb.setNewItemsAllowed(false);
-    timeZoneCmb.setNullSelectionAllowed(true);
+    timeZoneCmb.setItems("Africa/Cairo", "America/New_York", "America/Chicago",
+        "America/Los_Angeles", "Asia/Hong_Kong", "Asia/Seoul", "Etc/UTC", "Europe/London",
+        "Europe/Paris");
+    timeZoneCmb.setEmptySelectionAllowed(true);
     controlLayout.addComponent(timeZoneCmb);
 
     final Button tzBtn = new Button("Apply Time Zone");
@@ -304,81 +291,50 @@ public class DefaultDemo extends VerticalLayout {
 
     // Item type
     final ComboBox typeCmb = new ComboBox("Item Type");
-    typeCmb.setNullSelectionAllowed(false);
-    typeCmb.setImmediate(true);
-    typeCmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.ItemType itemType : TimelineOptions.ItemType.values()) {
-      typeCmb.addItem(itemType);
-    }
+    typeCmb.setEmptySelectionAllowed(false);
+    typeCmb.setTextInputAllowed(false);
+    typeCmb.setItems(TimelineOptions.ItemType.values());
     typeCmb.setValue(timeline.getOptions().getType());
-    typeCmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.getOptions().setType((TimelineOptions.ItemType) event.
-            getProperty().getValue());
-      }
+    typeCmb.addSelectionListener(evt -> {
+      timeline.getOptions().setType((TimelineOptions.ItemType) evt.getValue());
     });
     controlLayout.addComponent(typeCmb);
 
     // Item alignment
     final ComboBox alignCmb = new ComboBox("Item Alignment");
-    alignCmb.setNullSelectionAllowed(false);
-    alignCmb.setImmediate(true);
-    alignCmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.ItemAlignment a : TimelineOptions.ItemAlignment.
-        values()) {
-      alignCmb.addItem(a);
-    }
+    alignCmb.setEmptySelectionAllowed(false);
+    alignCmb.setTextInputAllowed(false);
+    alignCmb.setItems(TimelineOptions.ItemAlignment.values());
     alignCmb.setValue(timeline.getOptions().getAlign());
-    alignCmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.getOptions().setAlign((TimelineOptions.ItemAlignment) event.
-            getProperty().getValue());
-      }
+    alignCmb.addSelectionListener(evt -> {
+      timeline.getOptions().setAlign((TimelineOptions.ItemAlignment) evt.getValue());
     });
     controlLayout.addComponent(alignCmb);
 
     // Item orientation
     final ComboBox itemOrientCmb = new ComboBox("Item Orientation");
-    itemOrientCmb.setNullSelectionAllowed(false);
-    itemOrientCmb.setImmediate(true);
-    itemOrientCmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.ItemOrientation a : TimelineOptions.ItemOrientation.
-        values()) {
-      itemOrientCmb.addItem(a);
-    }
+    itemOrientCmb.setEmptySelectionAllowed(false);
+    itemOrientCmb.setTextInputAllowed(false);
+    itemOrientCmb.setItems(TimelineOptions.ItemOrientation.values());
     itemOrientCmb.setValue(TimelineOptions.ItemOrientation.valueOf(
         timeline.getOptions().getOrientation().item.toUpperCase()));
-    itemOrientCmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    itemOrientCmb.addSelectionListener(evt -> {
         timeline.getOptions().setOrientationItem(
-            (TimelineOptions.ItemOrientation) event.
-            getProperty().getValue());
-      }
+          (TimelineOptions.ItemOrientation) evt.getValue());
     });
     controlLayout.addComponent(itemOrientCmb);
 
     // Axis orientation
     final ComboBox axisOrientCmb = new ComboBox("Axis Orientation");
-    axisOrientCmb.setNullSelectionAllowed(false);
-    axisOrientCmb.setImmediate(true);
-    axisOrientCmb.setFilteringMode(FilteringMode.OFF);
-    for (TimelineOptions.TimeAxisOrientation a
-        : TimelineOptions.TimeAxisOrientation.
-        values()) {
-      axisOrientCmb.addItem(a);
-    }
+    axisOrientCmb.setEmptySelectionAllowed(false);
+    axisOrientCmb.setTextInputAllowed(false);
+    axisOrientCmb.setItems(TimelineOptions.TimeAxisOrientation.values());
     axisOrientCmb.setValue(TimelineOptions.TimeAxisOrientation.valueOf(
         timeline.getOptions().getOrientation().axis.toUpperCase()));
-    axisOrientCmb.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+
+    axisOrientCmb.addSelectionListener(evt -> {
         timeline.getOptions().setOrientationAxis(
-            (TimelineOptions.TimeAxisOrientation) event.
-            getProperty().getValue());
-      }
+          (TimelineOptions.TimeAxisOrientation) evt.getValue());
     });
     controlLayout.addComponent(axisOrientCmb);
 
@@ -409,144 +365,105 @@ public class DefaultDemo extends VerticalLayout {
     panel.setContent(controlLayout);
 
     CheckBox chk = new CheckBox("Read-only");
-    chk.setValue(timeline.isReadOnly());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
-        timeline.setReadOnly((Boolean) event.getProperty().getValue());
-      }
-    });
-    controlLayout.addComponent(chk);
+    // chk.setValue(timeline.isReadOnly());
+    // chk.addValueChangeListener(evt -> {
+    // timeline.setReadOnly(evt.getValue());
+    // });
+    // controlLayout.addComponent(chk);
 
     chk = new CheckBox("Edit Update Time");
     chk.setValue(timeline.getOptions().getEditable().updateTime);
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setEditableUpdateTime((Boolean) event.getProperty().getValue());
-      }
+      options.setEditableUpdateTime(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Edit Update Group");
     chk.setValue(timeline.getOptions().getEditable().updateGroup);
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setEditableUpdateGroup((Boolean) event.getProperty().getValue());
-      }
+      options.setEditableUpdateGroup(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Edit Add");
     chk.setValue(timeline.getOptions().getEditable().add);
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setEditableAdd((Boolean) event.getProperty().getValue());
-      }
+      options.setEditableAdd(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Edit Remove");
     chk.setValue(timeline.getOptions().getEditable().remove);
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setEditableRemove((Boolean) event.getProperty().getValue());
-      }
+      options.setEditableRemove(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Selectable");
     chk.setValue(timeline.getOptions().isSelectable());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setSelectable((Boolean) event.getProperty().getValue());
-      }
+      options.setSelectable(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Multiselect");
     chk.setValue(timeline.getOptions().isMultiselect());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setMultiselect((Boolean) event.getProperty().getValue());
-      }
+      options.setMultiselect(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Show Current Time");
     chk.setValue(timeline.getOptions().isShowCurrentTime());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setShowCurrentTime((Boolean) event.getProperty().getValue());
-      }
+      options.setShowCurrentTime(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Movable");
     chk.setValue(timeline.getOptions().isMoveable());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setMoveable((Boolean) event.getProperty().getValue());
-      }
+      options.setMoveable(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Zoomable");
     chk.setValue(timeline.getOptions().isZoomable());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setZoomable((Boolean) event.getProperty().getValue());
-      }
+      options.setZoomable(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Click to Use");
     chk.setValue(timeline.getOptions().isClickToUse());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setClickToUse((Boolean) event.getProperty().getValue());
-      }
+      options.setClickToUse(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Show Major Labels");
     chk.setValue(timeline.getOptions().isClickToUse());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setShowMajorLabels((Boolean) event.getProperty().getValue());
-      }
+      options.setShowMajorLabels(evt.getValue());
     });
     controlLayout.addComponent(chk);
 
     chk = new CheckBox("Show Minor Labels");
     chk.setValue(timeline.getOptions().isClickToUse());
-    chk.addValueChangeListener(new Property.ValueChangeListener() {
-      @Override
-      public void valueChange(Property.ValueChangeEvent event) {
+    chk.addValueChangeListener(evt -> {
         TimelineOptions options = timeline.getOptions();
-        options.setShowMinorLabels((Boolean) event.getProperty().getValue());
-      }
+      options.setShowMinorLabels(evt.getValue());
     });
     controlLayout.addComponent(chk);
 

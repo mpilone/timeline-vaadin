@@ -1,16 +1,17 @@
 package org.mpilone.vaadin.timeline;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Date;
+import java.util.EventObject;
+import java.util.List;
 
-import com.vaadin.data.Container;
 import com.vaadin.util.ReflectTools;
 
 /**
  * A provider of {@link TimelineItem} instances for a given date range. A
  * provider is normally set on a {@link Timeline} to supply the timeline with
  * data to be displayed. The provider could contain a static list of items or it
- * could be backed by a database or {@link Container}.
+ * could be backed by a database.
  *
  * @author mpilone
  */

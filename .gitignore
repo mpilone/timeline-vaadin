@@ -1,1 +1,6 @@
+# Eclipse files
+**/.project
+**/.classpath
+**/.settings
+
 /pom.xml.versionsBackup
