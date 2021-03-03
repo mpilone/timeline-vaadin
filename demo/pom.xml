@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.mpilone</groupId>
     <artifactId>timeline-vaadin-parent</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
   </parent>
   
   <artifactId>timeline-vaadin-demo</artifactId>

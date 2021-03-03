@@ -38,6 +38,8 @@ public class DefaultDemo extends VerticalLayout {
     t.setGroups(groups);
     t.setWidth(StyleConstants.FULL_WIDTH);
 
+    TimelineTimeZone.extend(t, "America/New_York");
+
     // Timeline
     addComponent(t);
 

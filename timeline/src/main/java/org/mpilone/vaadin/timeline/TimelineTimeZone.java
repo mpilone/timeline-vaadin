@@ -35,7 +35,7 @@ import com.vaadin.server.AbstractJavaScriptExtension;
  * @author mpilone
  */
 @JavaScript(value = {"moment/moment.min.js",
-  "moment-timezone/moment-timezone-with-data-2010-2020.min.js"})
+  "moment-timezone/moment-timezone-with-data-1970-2030.min.js"})
 public class TimelineTimeZone extends AbstractJavaScriptExtension {
 
   private final Timeline timeline;

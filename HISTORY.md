@@ -1,5 +1,9 @@
 # Timeline for Vaadin History
 
+## 2021-03-02, v3.0.1
+
+- Updated moment timezone data.
+
 ## 2016-06-13, v2.5.0
 
 - Added support for item orientation separate from axis orientation. (API breaking change)
