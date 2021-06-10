@@ -16,7 +16,7 @@
   <name>Timeline for Vaadin Demo</name>
 
   <properties>
-    <jetty.version>9.4.2.v20170220</jetty.version>
+    <jetty.version>9.4.41.v20210516</jetty.version>
   </properties>
 
   <dependencies>
